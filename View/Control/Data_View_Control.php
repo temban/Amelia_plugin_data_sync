@@ -1,11 +1,13 @@
 <?php
+
 class PrintAmeliaTables {
 
-public function Print_wp_amelia_providers_to_weekdays($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_providers_to_weekdays($sname,$uname,$password,$db_name, $url){
 		$this->sname= $sname;
 		$this->uname=$uname;
 		$this->password =$password;
 		$this->db_name =$db_name;
+		$this->url =$url;
 		  
 		  //connect to database
 		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -44,11 +46,12 @@ public function Print_wp_amelia_providers_to_weekdays($sname,$uname,$password,$d
 		  }	
 	  
 
-public function Print_wp_amelia_providers_to_services($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_providers_to_services($sname,$uname,$password,$db_name, $url){
 		$this->sname= $sname;
 		$this->uname=$uname;
 		$this->password =$password;
 		$this->db_name =$db_name;
+		$this->url =$url;
 		  
 		  //connect to database
 		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -88,11 +91,12 @@ public function Print_wp_amelia_providers_to_services($sname,$uname,$password,$d
 		  }
 		  }	
 
-public function Print_wp_amelia_providers_to_periods($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_providers_to_periods($sname,$uname,$password,$db_name, $url){
 		$this->sname= $sname;
 		$this->uname=$uname;
 		$this->password =$password;
 		$this->db_name =$db_name;
+		$this->url =$url;
 		  
 		  //connect to database
 		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -130,11 +134,12 @@ public function Print_wp_amelia_providers_to_periods($sname,$uname,$password,$db
 		  }
 		  }	
 
-public function Print_wp_amelia_providers_to_daysoff($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_providers_to_daysoff($sname,$uname,$password,$db_name, $url){
 		$this->sname= $sname;
 		$this->uname=$uname;
 		$this->password =$password;
 		$this->db_name =$db_name;
+		$this->url =$url;
 		  
 		  //connect to database
 		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -174,11 +179,12 @@ public function Print_wp_amelia_providers_to_daysoff($sname,$uname,$password,$db
 			
 		  }
 		  }	
-public function Print_wp_amelia_extras($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_extras($sname,$uname,$password,$db_name, $url){
 		$this->sname= $sname;
 		$this->uname=$uname;
 		$this->password =$password;
 		$this->db_name =$db_name;
+		$this->url =$url;
 			
 			//connect to database
 			$conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -229,11 +235,12 @@ public function Print_wp_amelia_extras($sname,$uname,$password,$db_name){
 		  }
 
 
-public function Print_wp_amelia_galleries($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_galleries($sname,$uname,$password,$db_name, $url){
 		$this->sname= $sname;
 		$this->uname=$uname;
 		$this->password =$password;
 		$this->db_name =$db_name;
+		$this->url =$url;
 				
 				//connect to database
 				$conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -273,11 +280,12 @@ public function Print_wp_amelia_galleries($sname,$uname,$password,$db_name){
 				  
 			}
 		  }
-public function Print_wp_amelia_providers_to_locations($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_providers_to_locations($sname,$uname,$password,$db_name, $url){
 			$this->sname= $sname;
 			$this->uname=$uname;
 			$this->password =$password;
 			$this->db_name =$db_name;
+			$this->url =$url;
 					
 					//connect to database
 					$conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -310,11 +318,12 @@ public function Print_wp_amelia_providers_to_locations($sname,$uname,$password,$
 					  
 				}
 			  }
-public function Print_wp_amelia_locations($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_locations($sname,$uname,$password,$db_name, $url){
 			$this->sname= $sname;
 			$this->uname=$uname;
 			$this->password =$password;
 			$this->db_name =$db_name;
+			$this->url =$url;
 					
 					//connect to database
 					$conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -361,7 +370,6 @@ public function Print_wp_amelia_locations($sname,$uname,$password,$db_name){
 						  echo$row_table_wp_amelia_locations['translations'];
 						  echo "</td></tr>";
 					  
-						
 					  }
 					  echo"</table>";
 					  
@@ -370,11 +378,12 @@ public function Print_wp_amelia_locations($sname,$uname,$password,$db_name){
 		  
 
 
-public function Print_wp_amelia_customer_bookings($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_customer_bookings($sname,$uname,$password,$db_name, $url){
 		$this->sname= $sname;
 		$this->uname=$uname;
 		$this->password =$password;
 		$this->db_name =$db_name;
+		$this->url =$url;
 						
 						//connect to database
 						$conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -437,11 +446,12 @@ public function Print_wp_amelia_customer_bookings($sname,$uname,$password,$db_na
 			}
 
 
-public function Print_wp_amelia_users($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_users($sname,$uname,$password,$db_name, $url){
 		$this->sname= $sname;
 		$this->uname=$uname;
 		$this->password =$password;
 		$this->db_name =$db_name;
+		$this->url =$url;
 						
 						//connect to database
 						$conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -520,11 +530,12 @@ public function Print_wp_amelia_users($sname,$uname,$password,$db_name){
 
 			
 
-public function Print_wp_amelia_appointments($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_appointments($sname,$uname,$password,$db_name, $url){
 			$this->sname= $sname;
 			$this->uname=$uname;
 			$this->password =$password;
 			$this->db_name =$db_name;
+			$this->url =$url;
 							
 							//connect to database
 							$conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -600,11 +611,12 @@ public function Print_wp_amelia_appointments($sname,$uname,$password,$db_name){
 
 
 
-public function Print_wp_amelia_categories($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_categories($sname,$uname,$password,$db_name, $url){
 	$this->sname= $sname;
 	$this->uname=$uname;
 	$this->password =$password;
 	$this->db_name =$db_name;
+	$this->url =$url;
 					
 					//connect to database
 					$conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -638,6 +650,46 @@ public function Print_wp_amelia_categories($sname,$uname,$password,$db_name){
 								echo"<tr></tr>";
 								echo"<tr></tr>";
 						
+
+								$idC = $row_table3['id'];
+								$statusC = $row_table3['status'];
+								$nameC = $row_table3['name'];
+								$positionC = $row_table3['position'];
+								$translationsC = $row_table3['translations'];
+
+								$postCat = [ 
+									"ameliaId" => $idC,
+									"status" => strtoupper($statusC),
+									"name" => $nameC,
+									"position" => $positionC,
+									"translations" => $translationsC,
+									"image" => "string",
+									"note" => "string"
+							];
+
+								$curl = curl_init();
+								
+								curl_setopt_array($curl, array(
+								  CURLOPT_URL => "$url/api/v1/categories",
+								  CURLOPT_RETURNTRANSFER => true,
+								  CURLOPT_ENCODING => '',
+								  CURLOPT_MAXREDIRS => 1,
+								  CURLOPT_TIMEOUT => 0,
+								  CURLOPT_FOLLOWLOCATION => true,
+								  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+								  CURLOPT_CUSTOMREQUEST => 'POST',
+								  CURLOPT_POSTFIELDS => json_encode($postCat),
+								  CURLOPT_HTTPHEADER => array(
+									'Content-Type: application/json'
+								  ),
+								));
+								
+								$response = curl_exec($curl);
+								
+								curl_close($curl);
+								echo $response;
+								
+
 							
 						}
 						echo"</table>";
@@ -645,11 +697,12 @@ public function Print_wp_amelia_categories($sname,$uname,$password,$db_name){
 			}
 		}
 
-public function Print_wp_amelia_services($sname,$uname,$password,$db_name){
+public function Print_wp_amelia_services($sname,$uname,$password,$db_name, $url){
 	$this->sname= $sname;
 	$this->uname=$uname;
 	$this->password =$password;
 	$this->db_name =$db_name;
+	$this->url = $url; 
 					
 					//connect to database
 					$conn = mysqli_connect($sname, $uname, $password, $db_name);
@@ -750,9 +803,110 @@ public function Print_wp_amelia_services($sname,$uname,$password,$db_name){
 								echo "</td><td>";
 								echo$row_table_user['limitPerCustomer'];
 								echo "</td></tr>";
-							
+
+
+								$id = $row_table_user['id'];
+								$name = $row_table_user['name'];
+								$description = $row_table_user['description'];
+								$color = $row_table_user['color'];
+								$price = $row_table_user['price'];
+
+								$status = $row_table_user['status'];
+								$categoryId = $row_table_user['categoryId'];
+								$minCapacity = $row_table_user['minCapacity'];
+								$maxCapacity = $row_table_user['maxCapacity'];
+								$duration = $row_table_user['duration'];
+
+								$timeBefore = $row_table_user['timeBefore'];
+								$timeAfter = $row_table_user['timeAfter'];
+								$bringingAnyone = $row_table_user['bringingAnyone'];
+								$priority = $row_table_user['priority'];
+								$pictureFullPath = $row_table_user['pictureFullPath'];
+
+								$pictureThumbPath = $row_table_user['pictureThumbPath'];
+								$position = $row_table_user['position'];
+								$show = $row_table_user['show'];
+								$aggregatedPrice = $row_table_user['aggregatedPrice'];
+								$settings = $row_table_user['settings'];
+
+								$recurringCycle = $row_table_user['recurringCycle'];
+								$recurringSub = $row_table_user['recurringSub'];
+								$recurringPayment = $row_table_user['recurringPayment'];
+								$translations = $row_table_user['translations'];
+								$depositPayment = $row_table_user['depositPayment'];
+
+								$depositPerPerson = $row_table_user['depositPerPerson'];
+								$deposit = $row_table_user['deposit'];
+								$fullPayment = $row_table_user['fullPayment'];
+								$mandatoryExtra = $row_table_user['mandatoryExtra'];
+								$minSelectedExtras = $row_table_user['minSelectedExtras'];
+
+								$customPricing = $row_table_user['customPricing'];
+								$maxExtraPeople = $row_table_user['maxExtraPeople'];
+								$limitPerCustomer = $row_table_user['limitPerCustomer'];
+
+
+								$postServices = [ 
+									"id" => $id,
+									"name" => $name,
+									"description" => $description,
+									"color" => $color,
+									"price" => $price,
+									"status" => strtoupper($status),
+									"minCapacity" => $minCapacity,
+									"maxCapacity" => $maxCapacity,
+									"duration" => $duration,
+									"timeBefore" => $timeBefore,
+									"timeAfter" => $timeAfter,
+									"bringingAnyone" => $bringingAnyone,
+									"priority" => strtoupper($priority),
+									"position" => $position,
+									"show" => $show,
+									"aggregatedPrice" => $aggregatedPrice,
+									"settings" => $settings,
+									"recurringCycle" => strtoupper($recurringCycle),
+									"recurringSub" => strtoupper($recurringSub),
+									"recurringPayment" => $recurringPayment,
+									"translation" => $translations,
+									"depositPayment" => strtoupper($depositPayment),
+									"depositPerPerson" => $depositPerPerson,
+									"deposit" => $deposit,
+									"fullPayment" => $fullPayment,
+									"mendatoryExtra" => $mandatoryExtra ,
+									"minSelectedExtra" => $minSelectedExtras,
+									"customPricing" => $customPricing,
+									"maxExtraPeople" => $maxExtraPeople,
+									"limitPerCustomer" => $limitPerCustomer,
+									"imageUrl" => $pictureFullPath
+
+								
+									//"status" => strtoupper($statusC),
+							];
+
+$curl = curl_init();
+
+curl_setopt_array($curl, array( 
+  CURLOPT_URL => "$url/api/v1/categories/$categoryId/services",
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_ENCODING => '',
+  CURLOPT_MAXREDIRS => 1,
+  CURLOPT_TIMEOUT => 0,
+  CURLOPT_FOLLOWLOCATION => true,
+  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+  CURLOPT_CUSTOMREQUEST => 'POST',
+  CURLOPT_POSTFIELDS => json_encode($postServices),
+  CURLOPT_HTTPHEADER => array(
+    'Content-Type: application/json'
+  ),
+));
+
+$response = curl_exec($curl);
+
+curl_close($curl);
+echo $response;
+
 						}
-						echo"</table>";
+    echo"</table>";
 						
 			}
 		}
