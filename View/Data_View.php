@@ -10,7 +10,7 @@
 
 
 <?php 
-$url = 'http://192.168.43.7:3000';
+$url = 'http://192.168.16.105:3000';
 
 
 include('Control/Data_View_Control.php');

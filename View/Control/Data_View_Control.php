@@ -16,13 +16,14 @@ public function Print_wp_amelia_users_post($sname,$uname,$password,$db_name, $ur
 		$sql_table_user="SELECT * FROM wp_amelia_users";
 		$report_table_user=mysqli_query($conn,$sql_table_user);
 		if($report_table_user== TRUE){ 
-		while($row_table_user=mysqli_fetch_array($report_table_user) )
+		while($row_table_user=mysqli_fetch_array($report_table_user))
 		{
 			    $id = $row_table_user['id'];
-				$status = $row_table_user['status'];
+				$status = $row_table_user['status']; 
 				$type = $row_table_user['type'];
 				$externalId = $row_table_user['externalId'];
 				$firstName = $row_table_user['firstName'];
+
 
 				$lastName = $row_table_user['lastName'];
 				$email = $row_table_user['email'];
@@ -31,17 +32,20 @@ public function Print_wp_amelia_users_post($sname,$uname,$password,$db_name, $ur
 				$gender = $row_table_user['gender'];
 				$note = $row_table_user['note'];
 
+
 				$description = $row_table_user['description'];
 				$pictureFullPath = $row_table_user['pictureFullPath'];
 				$pictureThumbPath = $row_table_user['pictureThumbPath'];
 				$password = $row_table_user['password'];
 				$usedTokens = $row_table_user['usedTokens'];
 
+
 				$zoomUserId = $row_table_user['zoomUserId'];
 				$countryPhoneIso = $row_table_user['countryPhoneIso'];
 				$translations = $row_table_user['translations'];
 				$timeZone = $row_table_user['timeZone'];
 				$willOnHairId = $row_table_user['willOnHairColunm'];
+
 
 				$postUser = [ 
 					"id" => $willOnHairId,
@@ -120,9 +124,6 @@ public function Print_wp_amelia_users_insert($sname,$uname,$password,$db_name, $
 	$this->password =$password;
 	$this->db_name =$db_name;
 	$this->url =$url;
-
-
-
 $curl = curl_init();
 
 curl_setopt_array($curl, array(
@@ -184,7 +185,6 @@ while($i < count($result)) {
 	  if(mysqli_num_rows($report_userSend) > 0){ 
 	  
 		
-
 	  $checkColumnWill = "SELECT willOnHairColunm FROM wp_amelia_users WHERE id = '$ameliaId'";
 	  $report_checkColumnWill=mysqli_query($conn,$checkColumnWill);
 	  
@@ -351,73 +351,58 @@ while($i < count($result)) {
 						//connect to database
 						$conn = mysqli_connect($sname, $uname, $password, $db_name);
 						
-						
+						//Create New Table for categories sync
 						$sqlCreate = "CREATE TABLE willOnHairTableCat(
 							`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-							`willOnHairCol` INT(100) NOT NULL DEFAULT 0,
-							`ameliaCol` INT(100) NOT NULL,
+							`willOnHairCol` INT NOT NULL DEFAULT 0,
+							`ameliaCol` INT NOT NULL,
 	                        `status` enum('hidden','visible','disabled') NOT NULL DEFAULT 'visible',
-	                        `name` varchar(255) NOT NULL DEFAULT '',
-                         	`position` int(11) NOT NULL,
+	                        `name` varchar(2555) NOT NULL DEFAULT '',
+                         	`position` int NOT NULL,
                          	`translations` text DEFAULT NULL
 						)";
 						
 							$report_sqlCreate=mysqli_query($conn,$sqlCreate);
-						
+						//Verify if Table has been created
 							if ($report_sqlCreate === TRUE) {
-							  echo "Table willOnHairTableCat created successfully <br>";
-							} else {
-							  echo "Error creating table: <br>";
 							}
 
-							
-							$sql_amelia_willOnHairTableCat="SELECT * FROM wp_amelia_categories";
-							$report_amelia_willOnHairTableCat=mysqli_query($conn,$sql_amelia_willOnHairTableCat);
+							// Select and collect data from table: wp_amelia_categories
+							$sql_send_to_amelia="SELECT * FROM wp_amelia_categories";
+							$report_send_to_amelia=mysqli_query($conn,$sql_send_to_amelia);
 
-							if($report_amelia_willOnHairTableCat== TRUE){ 
+							if($report_send_to_amelia== TRUE){ 
 
 
-							while($row_amelia_willOnHairTableCat=mysqli_fetch_array($report_amelia_willOnHairTableCat))
+							while($row_send_to_amelia=mysqli_fetch_array($report_send_to_amelia))
 							{
-							
-									$ameliaId = $row_amelia_willOnHairTableCat['id'];
+							 // store each data from table: wp_amelia_categories in variables
+									$ameliaId = $row_send_to_amelia['id'];
 
-									$status = $row_amelia_willOnHairTableCat['status'];	
-									$name = $row_amelia_willOnHairTableCat['name'];
+									$status = $row_send_to_amelia['status'];	
+									$name = $row_send_to_amelia['name'];
 
-									$position = $row_amelia_willOnHairTableCat['position'];
-									$translations = $row_amelia_willOnHairTableCat['translations'];
-
-									// echo "ameliaId: $row_amelia_willOnHairTableCa['id'] <br>";
-									// echo "status: $row_amelia_willOnHairTableCa['status']<br>";
-									// echo "name: $row_amelia_willOnHairTableCa['name'] <br>";
-									// echo "position: $row_amelia_willOnHairTableCa['position'] <br>";
-									// echo "translations: $row_amelia_willOnHairTableCa['translations'] <br>";
+									$position = $row_send_to_amelia['position'];
+									$translations = $row_send_to_amelia['translations'];
 				 
+
+									// Select Table: willOnHairTableCat and isnert records coming from table: wp_amelia_categories
 									$conn = mysqli_connect($sname, $uname, $password, $db_name);
-											   
-				 
-				 
 									  $qry="SELECT * FROM willOnHairTableCat";
 									  $rowCheck=mysqli_query($conn,$qry);
-		  
-
-										  if ($rowCheck ==TRUE) { 
-
-											
-
-
+									   if ($rowCheck ==TRUE) { 
 											$qry = "INSERT INTO willOnHairTableCat (`ameliaCol`, `status`, `name`, `position`, `translations`)
 											  VALUES ('$ameliaId','$status', '$name', '$position','$translations')"; 
 											if (mysqli_query($conn,$qry)){ 
-											echo "cat insert ELSE 1 <br>"; 
+											
 											}  
-											 // insert the data if data is not exist
 											 
 										  }
 							}
 						}
 			
+
+						//After receiving data from table: wp_amelia_categories, next process to send it to the backend
 								$sql_table3="SELECT * FROM willOnHairTableCat";
 								$report_table3=mysqli_query($conn,$sql_table3);
 								if($report_table3== TRUE ){ 
@@ -425,6 +410,7 @@ while($i < count($result)) {
 								while($row_table3=mysqli_fetch_array($report_table3) )
 								{
 							
+									// select and store all records of table: willOnHairTableCat in variables
 
 			                        $willOnHairId = $row_table3['willOnHairCol'];
 									$ameliaId = $row_table3['ameliaCol'];
@@ -433,6 +419,7 @@ while($i < count($result)) {
 									$positionC = $row_table3['position'];
 									$translationsC = $row_table3['translations'];
 			
+									// we bind fields from the backend with our variables of the Table: willOnHairTableCat in an array
 									$postCat = [ 
 										"id" => $willOnHairId,
 										"ameliaId" => $ameliaId,
@@ -443,6 +430,8 @@ while($i < count($result)) {
 										"image" => "string",
 										"note" => "string"
 								];
+
+								// request header of our post to the backend
 			
 									$curl = curl_init();
 									
@@ -455,7 +444,7 @@ while($i < count($result)) {
 									  CURLOPT_FOLLOWLOCATION => true,
 									  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 									  CURLOPT_CUSTOMREQUEST => 'POST',
-									  CURLOPT_POSTFIELDS => json_encode($postCat),
+									  CURLOPT_POSTFIELDS => json_encode($postCat),//here we convert our array to a json format
 									  CURLOPT_HTTPHEADER => array(
 										'Content-Type: application/json'
 									  ),
@@ -464,78 +453,15 @@ while($i < count($result)) {
 									$response = curl_exec($curl);
 			
 							 curl_close($curl);
-							 echo "<br>";
-			// echo "<br>";
-			// echo "Categories post<br>";
-			// echo json_encode($response);
-			// echo "<br>";
-			// echo "<br>";
-			
-
 
 
 							}
 
 												
 				}
-
-
-				$sql_OUR="SELECT * FROM willOnHairTableCat";
-				$report_OUR=mysqli_query($conn,$sql_OUR);
-				if($report_OUR== TRUE){ 
-				echo "<br>TABLE NAME: wp_OUR_TABLE_POST<br>";
-				echo "<table border='5'>";
-				echo "<tr><th>id</th>
-				<th>willOnHairCol</th> <th>ameliaCol</th>  <th>status</th>  <th>name</th><th>position</th>
-				<th>translations</th></tr>";
-				
-				while($row_OUR=mysqli_fetch_array($report_OUR) )
-				{
-				
-				
-					echo "<tr><td>";									
-					echo$row_OUR['id'];
-					echo "</td><td>";
-					echo$row_OUR['willOnHairCol'];
-					echo "</td><td>";
-					echo$row_OUR['ameliaCol'];
-					echo "</td><td>";
-					echo$row_OUR['status'];
-					echo "</td><td>";
-					echo$row_OUR['name'];
-					echo "</td><td>";
-					echo$row_OUR['position'];
-					echo "</td><td>";									
-					echo$row_OUR['translations'];
-					echo "</td></tr>";
-					echo"<tr></tr>";
-					echo"<tr></tr>";
-					echo"<tr></tr>";
-				
-				}
-				echo"</table>";
-				
-				}
-
-
-				// $query = "DROP table willOnHairTableCat";
-				// 			if (mysqli_multi_query($conn, $query)) {
-				// 			  echo "Dropped Successfully";
-				// 			} else {
-				// 			  echo "Error:" . mysqli_error($conn);
-				// 			}	
-
-// 				$sql_willOnHairColunm="ALTER TABLE wp_amelia_categories DROP willOnHairColunm";
-// $report_willOnHairColunm=mysqli_query($conn,$sql_willOnHairColunm);
-// if($report_willOnHairColunm !== FALSE)
-// {
-//    echo("The column has been deleted.");
-// }else{
-//    echo("The column has not been deleted.");
-// }
 			}
 			
-			//=============get from databa and insert in amelia_categories ===============
+			//=============get from database and insert in amelia_categories ===============
 			public function Print_wp_amelia_categories_insert($sname,$uname,$password,$db_name, $url){
 				$this->sname= $sname;
 				$this->uname=$uname;
@@ -543,30 +469,11 @@ while($i < count($result)) {
 				$this->db_name =$db_name;
 				$this->url =$url;
 			
+// we creat a connection
+			$conn = mysqli_connect($sname, $uname, $password, $db_name);			
 
-				$conn = mysqli_connect($sname, $uname, $password, $db_name);			
-
-				// $sqlCreate = "CREATE TABLE willOnHairTableCat(
-				// 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-				// 	`willOnHairCol` INT(100) NOT NULL DEFAULT 0,
-				// 	`ameliaCol` INT(100) NOT NULL,
-				// 	`status` enum('hidden','visible','disabled') NOT NULL DEFAULT 'visible',
-				// 	`name` varchar(255) NOT NULL DEFAULT '',
-				// 	 `position` int(11) NOT NULL,
-				// 	 `translations` text DEFAULT NULL
-				// )";
-				
-				// 	$report_sqlCreate=mysqli_query($conn,$sqlCreate);
-				
-				// 	if ($report_sqlCreate == TRUE) {
-				// 	  echo "Table willOnHairTableCat created successfully <br>";
-				// 	} else {
-				// 	  echo "Error creating table: <br>";
-				// 	}
-
-
+			// request header of our get from the backend
 			$curl = curl_init();
-			
 			curl_setopt_array($curl, array(
 			CURLOPT_URL => "$url/api/v1/categories",
 			CURLOPT_RETURNTRANSFER => true,
@@ -582,10 +489,10 @@ while($i < count($result)) {
 			));
 			
 			$response = curl_exec($curl);
-			$result = json_decode($response, true);
+			$result = json_decode($response, true); // here we decode data coming from backend and store it as an array
 			curl_close($curl);
 			
-			
+			// we loop through our array and store eacch into variables
 			$i = 0;
 			while($i < count($result)) {
 			$willOnHairId = $result[$i]['id'];	
@@ -595,18 +502,27 @@ while($i < count($result)) {
 			$position = $result[$i]['position'];
 			$translations = $result[$i]['translations'];
 			
-			
+			//we select all records from table: willOnHairTableCat with the particular key:ameliaCol
 			$conn = mysqli_connect($sname, $uname, $password, $db_name);			
-			$sql_catSend="SELECT * FROM willOnHairTableCat WHERE willOnHairCol=$willOnHairId";
-			$report_catSend=mysqli_query($conn,$sql_catSend);
+			$sql_First_get="SELECT * FROM willOnHairTableCat WHERE ameliaCol=$ameliaId";
+			$report_First_get=mysqli_query($conn,$sql_First_get);
 			
-			if($report_catSend == FALSE){ 
-					  $insertCat1 = "INSERT INTO willOnHairTableCat(`willOnHairCol`, `ameliaCol`, `status`, `name`, `position`, `translations`) 
-					  VALUES ('$willOnHairId', '$ameliaId', '$status','$name','$position','$translations')"; 
-						  if (mysqli_query($conn,$insertCat1)){ 
-						  echo "cat insert ELSE 1 <br>"; 
-						  }  
+
+			
+			if($report_First_get == TRUE){ 
+				// if the above key exist we update the records that concerns the key
+					 $sql_updat_wilID="UPDATE `willOnHairTableCat` SET `willOnHairCol`='$willOnHairId' WHERE ameliaCol = '$ameliaId'";
+					 $report_updat_wilID=mysqli_query($conn,$sql_updat_wilID);
+					 if (mysqli_query($conn,$report_updat_wilID)){ 
+						
+						}  
 				 
+				} else{
+					//if the above key does not exist we insert a new record of the non existing key
+					$insert_First_get = "INSERT INTO willOnHairTableCat(`willOnHairCol`, `ameliaCol`, `status`, `name`, `position`, `translations`) 
+					VALUES ('$willOnHairId', '$ameliaId', '$status','$name','$position','$translations')"; 
+						if (mysqli_query($conn,$insert_First_get)){ 
+						}  
 				}
 			
 			
@@ -615,52 +531,63 @@ while($i < count($result)) {
 			$i++;
 			}
 			
-
-			
-
+            // we select table: willOnHairTableCat for the process of 
+			//generating amelia ids for the records coming from the backend by 
+			//inserting them into the table: wp_amelia_categories
 			$conn = mysqli_connect($sname, $uname, $password, $db_name);			
-			$sql_amelia_willOnHairTableCat="SELECT * FROM willOnHairTableCat";
-			$report_amelia_willOnHairTableCat=mysqli_query($conn,$sql_amelia_willOnHairTableCat);
+			$sql_send_to_amelia="SELECT * FROM willOnHairTableCat";
+			$report_send_to_amelia=mysqli_query($conn,$sql_send_to_amelia);
 
-			if($report_amelia_willOnHairTableCat== TRUE ){ 
-			while($row_amelia_willOnHairTableCat=mysqli_fetch_array($report_amelia_willOnHairTableCat))
+			if($report_send_to_amelia== TRUE ){ 
+			while($row_send_to_amelia=mysqli_fetch_array($report_send_to_amelia))
 			{
+                    // we store all its records into variables
+					$willOnHairId = $row_send_to_amelia['willOnHairCol'];	
+					$ameliaId = $row_send_to_amelia['ameliaCol'];
 
-					$willOnHairId = $row_amelia_willOnHairTableCat['willOnHairCol'];	
-					$ameliaId = $row_amelia_willOnHairTableCat['ameliaCol'];
+					$status = $row_send_to_amelia['status'];	
+					$name = $row_send_to_amelia['name'];
 
-					$status = $row_amelia_willOnHairTableCat['status'];	
-					$name = $row_amelia_willOnHairTableCat['name'];
+					$position = $row_send_to_amelia['position'];
+					$translations = $row_send_to_amelia['translations'];
 
-					$position = $row_amelia_willOnHairTableCat['position'];
-					$translations = $row_amelia_willOnHairTableCat['translations'];
+            
+				// check the record ameliaId if null or equal to 0 we insert the whole record into tablle:wp_amelia_categories
+				if($ameliaId == NULL || $ameliaId == 0){ 
+					$send_to_amelia_category = "INSERT INTO wp_amelia_categories(`status`, `name`, `position`, `translations`) 
+					VALUES ('$status','$name','$position','$translations')"; 
+					if (mysqli_query($conn,$send_to_amelia_category)){ 
 
-
-				$sql_amelia_insert="SELECT * FROM wp_amelia_categories WHERE id = '$ameliaId'";
-				$report_amelia_insert=mysqli_query($conn,$sql_amelia_insert);
-				
-				if(mysqli_num_rows($report_amelia_insert) < 0){ 
-					$insertamelia_insert = "INSERT INTO wp_amelia_categories(`status`, `name`, `position`, `translations`) VALUES ('$status','$name','$position','$translations')"; 
-					if (mysqli_query($conn,$insertamelia_insert)){ 
-					echo "cat insert ELSE 1 <br>"; 
-                          
+                     //during each insert of each records form the while loop and the above 
+					 //contion we collect the last id that was inserted into the table:wp_amelia_categories so as to
+					 //up the column: ameliaCol in th Table: willOnHairTableCat
 					$last_id = mysqli_insert_id($conn);
 					if( $last_id ==TRUE ){
 							$willOnHairTableCat_updateTable	= "UPDATE `willOnHairTableCat` SET `ameliaCol`='$last_id' WHERE willOnHairCol = '$willOnHairId'";
 	
 							if (mysqli_query($conn,$willOnHairTableCat_updateTable)){
-							
-							echo " cat update IF <br>";
-                            
+							$sql_second_post="SELECT * FROM willOnHairTableCat WHERE willOnHairCol = '$willOnHairId'";
+							$report_second_post=mysqli_query($conn,$sql_second_post);
+				
+							if($row_second_post=mysqli_fetch_array($report_second_post)){ 
 
+								$ameliaId_send = $row_second_post['ameliaCol'];
+			
+								$status_send = $row_second_post['status'];	
+								$name_send = $row_second_post['name'];
+			
+								$position_send = $row_second_post['position'];
+								$translations_send = $row_second_post['translations'];
 
-							$postCat = [ 
+                           //After the column: ameliaCol in th Table: willOnHairTableCat is up to date
+						   // we send the updated table:willOnHairTableCat to the backend
+							$postCategory = [ 
 								"id" => $willOnHairId,
-								"ameliaId" => $ameliaId,
-								"status" => strtoupper($status),
-								"name" => $name,
-								"position" => $position,
-								"translations" => $translations,
+								"ameliaId" => $ameliaId_send,
+								"status" => strtoupper($status_send),
+								"name" => $name_send,
+								"position" => $position_send,
+								"translations" => $translations_send,
 								"image" => "string",
 								"note" => "string"
 						];
@@ -676,7 +603,7 @@ while($i < count($result)) {
 							  CURLOPT_FOLLOWLOCATION => true,
 							  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 							  CURLOPT_CUSTOMREQUEST => 'POST',
-							  CURLOPT_POSTFIELDS => json_encode($postCat),
+							  CURLOPT_POSTFIELDS => json_encode($postCategory),
 							  CURLOPT_HTTPHEADER => array(
 								'Content-Type: application/json'
 							  ),
@@ -685,7 +612,6 @@ while($i < count($result)) {
 							$response = curl_exec($curl);
 	
 					 curl_close($curl);
-					 echo "<br>";
 
 
 							}
@@ -694,56 +620,14 @@ while($i < count($result)) {
 					}
 					
 
-				
+					}
 					
 					}  
 	
-			
-	
-				} 
-				$i++;
+
 				}
-			}
-
-
-
-
-
-			$sql_OUR="SELECT * FROM willOnHairTableCat";
-			$report_OUR=mysqli_query($conn,$sql_OUR);
-			if($report_OUR== TRUE){ 
-			echo "<br>TABLE NAME: wp_OUR_TABLE_GET<br>";
-			echo "<table border='5'>";
-			echo "<tr><th>id</th>
-			<th>willOnHairCol</th> <th>ameliaCol</th>  <th>status</th> <th>name</th><th>position</th>
-			<th>translations</th></tr>";
-			
-			while($row_OUR=mysqli_fetch_array($report_OUR) )
-			{
-			
-			
-				echo "<tr><td>";									
-				echo$row_OUR['id'];
-				echo "</td><td>";
-				echo$row_OUR['willOnHairCol'];
-				echo "</td><td>";
-				echo$row_OUR['ameliaCol'];
-				echo "</td><td>";
-				echo$row_OUR['status'];
-				echo "</td><td>";
-				echo$row_OUR['name'];
-				echo "</td><td>";
-				echo$row_OUR['position'];
-				echo "</td><td>";									
-				echo$row_OUR['translations'];
-				echo "</td></tr>";
-				echo"<tr></tr>";
-				echo"<tr></tr>";
-				echo"<tr></tr>";
-			
-			}
-			echo"</table>";
-			
+				
+				}
 			}
 
 
@@ -754,7 +638,8 @@ while($i < count($result)) {
 			//   echo "Error:" . mysqli_error($conn);
 			// }	
 			
-			
+			// we display the final results of the table: wp_amelia_categories 
+			//which now contains a sync data of wp_amelia_categories and the backend 
 			$sql_table3="SELECT * FROM wp_amelia_categories";
 			$report_table3=mysqli_query($conn,$sql_table3);
 			if($report_table3== TRUE){ 
@@ -789,19 +674,6 @@ while($i < count($result)) {
 			}
 			
 			}
-
-			public function drop($sname,$uname,$password,$db_name, $url){
-				$conn = mysqli_connect($sname, $uname, $password, $db_name);
-				$sql_deletecolumn="ALTER TABLE wp_amelia_categories DROP willOnHairColunm";
-				$report_deletecolumn=mysqli_query($conn,$sql_deletecolumn);
-				
-				if($report_deletecolumn !== FALSE)
-				{
-				   echo("The column has been deleted.");
-				}else{
-				   echo("The column has not been deleted.");
-				}	
-							}
 
 
 
