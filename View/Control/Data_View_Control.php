@@ -518,12 +518,12 @@ while($i < count($result)) {
 				}
 
 
-				$query = "DROP table willOnHairTableCat";
-							if (mysqli_multi_query($conn, $query)) {
-							  echo "Dropped Successfully";
-							} else {
-							  echo "Error:" . mysqli_error($conn);
-							}	
+				// $query = "DROP table willOnHairTableCat";
+				// 			if (mysqli_multi_query($conn, $query)) {
+				// 			  echo "Dropped Successfully";
+				// 			} else {
+				// 			  echo "Error:" . mysqli_error($conn);
+				// 			}	
 
 // 				$sql_willOnHairColunm="ALTER TABLE wp_amelia_categories DROP willOnHairColunm";
 // $report_willOnHairColunm=mysqli_query($conn,$sql_willOnHairColunm);
@@ -546,23 +546,23 @@ while($i < count($result)) {
 
 				$conn = mysqli_connect($sname, $uname, $password, $db_name);			
 
-				$sqlCreate = "CREATE TABLE willOnHairTableCat(
-					`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-					`willOnHairCol` INT(100) NOT NULL DEFAULT 0,
-					`ameliaCol` INT(100) NOT NULL,
-					`status` enum('hidden','visible','disabled') NOT NULL DEFAULT 'visible',
-					`name` varchar(255) NOT NULL DEFAULT '',
-					 `position` int(11) NOT NULL,
-					 `translations` text DEFAULT NULL
-				)";
+				// $sqlCreate = "CREATE TABLE willOnHairTableCat(
+				// 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+				// 	`willOnHairCol` INT(100) NOT NULL DEFAULT 0,
+				// 	`ameliaCol` INT(100) NOT NULL,
+				// 	`status` enum('hidden','visible','disabled') NOT NULL DEFAULT 'visible',
+				// 	`name` varchar(255) NOT NULL DEFAULT '',
+				// 	 `position` int(11) NOT NULL,
+				// 	 `translations` text DEFAULT NULL
+				// )";
 				
-					$report_sqlCreate=mysqli_query($conn,$sqlCreate);
+				// 	$report_sqlCreate=mysqli_query($conn,$sqlCreate);
 				
-					if ($report_sqlCreate == TRUE) {
-					  echo "Table willOnHairTableCat created successfully <br>";
-					} else {
-					  echo "Error creating table: <br>";
-					}
+				// 	if ($report_sqlCreate == TRUE) {
+				// 	  echo "Table willOnHairTableCat created successfully <br>";
+				// 	} else {
+				// 	  echo "Error creating table: <br>";
+				// 	}
 
 
 			$curl = curl_init();
@@ -597,10 +597,10 @@ while($i < count($result)) {
 			
 			
 			$conn = mysqli_connect($sname, $uname, $password, $db_name);			
-			$sql_catSend="SELECT * FROM willOnHairTableCat";
+			$sql_catSend="SELECT * FROM willOnHairTableCat WHERE willOnHairCol=$willOnHairId";
 			$report_catSend=mysqli_query($conn,$sql_catSend);
 			
-			if($report_catSend == TRUE){ 
+			if($report_catSend == FALSE){ 
 					  $insertCat1 = "INSERT INTO willOnHairTableCat(`willOnHairCol`, `ameliaCol`, `status`, `name`, `position`, `translations`) 
 					  VALUES ('$willOnHairId', '$ameliaId', '$status','$name','$position','$translations')"; 
 						  if (mysqli_query($conn,$insertCat1)){ 
@@ -639,28 +639,73 @@ while($i < count($result)) {
 				$sql_amelia_insert="SELECT * FROM wp_amelia_categories WHERE id = '$ameliaId'";
 				$report_amelia_insert=mysqli_query($conn,$sql_amelia_insert);
 				
-				if(mysqli_num_rows($report_amelia_insert) > 0){ 
+				if(mysqli_num_rows($report_amelia_insert) < 0){ 
+					$insertamelia_insert = "INSERT INTO wp_amelia_categories(`status`, `name`, `position`, `translations`) VALUES ('$status','$name','$position','$translations')"; 
+					if (mysqli_query($conn,$insertamelia_insert)){ 
+					echo "cat insert ELSE 1 <br>"; 
+                          
+					$last_id = mysqli_insert_id($conn);
+					if( $last_id ==TRUE ){
+							$willOnHairTableCat_updateTable	= "UPDATE `willOnHairTableCat` SET `ameliaCol`='$last_id' WHERE willOnHairCol = '$willOnHairId'";
+	
+							if (mysqli_query($conn,$willOnHairTableCat_updateTable)){
+							
+							echo " cat update IF <br>";
+                            
+
+
+							$postCat = [ 
+								"id" => $willOnHairId,
+								"ameliaId" => $ameliaId,
+								"status" => strtoupper($status),
+								"name" => $name,
+								"position" => $position,
+								"translations" => $translations,
+								"image" => "string",
+								"note" => "string"
+						];
+	
+							$curl = curl_init();
+							
+							curl_setopt_array($curl, array(
+							  CURLOPT_URL => "$url/api/v1/categories",
+							  CURLOPT_RETURNTRANSFER => true,
+							  CURLOPT_ENCODING => '',
+							  CURLOPT_MAXREDIRS => 1,
+							  CURLOPT_TIMEOUT => 0,
+							  CURLOPT_FOLLOWLOCATION => true,
+							  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+							  CURLOPT_CUSTOMREQUEST => 'POST',
+							  CURLOPT_POSTFIELDS => json_encode($postCat),
+							  CURLOPT_HTTPHEADER => array(
+								'Content-Type: application/json'
+							  ),
+							));
+							
+							$response = curl_exec($curl);
+	
+					 curl_close($curl);
+					 echo "<br>";
+
+
+							}
+
+
+					}
+					
+
+				
+					
+					}  
+	
 			
 	
-				$updateamelia_insert	= "UPDATE `wp_amelia_categories` SET `status`='$status',`name`='$name',`position`='$position',`translations`=$translations WHERE id='$ameliaId'";
-	
-				if (mysqli_query($conn,$updateamelia_insert)){
-				
-				echo " cat update IF <br>";
-				}
-	
 				} 
-				
-				else{ 
-						  $insertamelia_insert = "INSERT INTO wp_amelia_categories(`status`, `name`, `position`, `translations`) VALUES ('$status','$name','$position','$translations')"; 
-							  if (mysqli_query($conn,$insertamelia_insert)){ 
-							  echo "cat insert ELSE 1 <br>"; 
-							  }  
-					 
-					}
 				$i++;
 				}
 			}
+
+
 
 
 
@@ -702,12 +747,12 @@ while($i < count($result)) {
 			}
 
 
-			$query = "DROP table willOnHairTableCat";
-			if (mysqli_multi_query($conn, $query)) {
-			  echo "Dropped Successfully";
-			} else {
-			  echo "Error:" . mysqli_error($conn);
-			}	
+			// $query = "DROP table willOnHairTableCat";
+			// if (mysqli_multi_query($conn, $query)) {
+			//   echo "Dropped Successfully";
+			// } else {
+			//   echo "Error:" . mysqli_error($conn);
+			// }	
 			
 			
 			$sql_table3="SELECT * FROM wp_amelia_categories";
