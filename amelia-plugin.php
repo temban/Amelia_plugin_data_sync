@@ -22,3 +22,8 @@ function ameliatables_options_page() {
 function ameliatables ()	{
 	include_once('View/DB_Conection_View.php');
 }
+
+
+
+
+
