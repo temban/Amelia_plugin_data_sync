@@ -1,3 +1,5 @@
+
+
 <?php
 
 class PrintAmeliaTables {
@@ -524,6 +526,303 @@ class PrintAmeliaTables {
 			// }
 	}
 	
+		//locations get and post
+		//============= post to database ======================
+	public function Print_wp_amelia_providers_to_locations_post($sname,$uname,$password,$db_name, $url){
+			$this->sname= $sname;
+			$this->uname=$uname;
+			$this->password =$password;
+			$this->db_name =$db_name;
+			$this->url =$url;
+			
+			
+									
+									//connect to database
+									$conn = mysqli_connect($sname, $uname, $password, $db_name);
+									
+									//Create New Table for locations sync
+									$sqlCreate = "CREATE TABLE willOnHairTableProvidersToLocations(
+											`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+											`willOnHairCol` INT NOT NULL DEFAULT 0,
+											`ameliaCol` INT NOT NULL,
+											`userId` int NOT NULL,
+											`locationId` int NOT NULL
+									)";
+									
+											$report_sqlCreate=mysqli_query($conn,$sqlCreate);
+									//Verify if Table has been created
+											if ($report_sqlCreate === TRUE) {
+											}
+
+											// Select and collect data from table: wp_amelia_providers_to_locations
+											$sql_send_to_amelia="SELECT * FROM wp_amelia_providers_to_locations";
+											$report_send_to_amelia=mysqli_query($conn,$sql_send_to_amelia);
+
+											if($report_send_to_amelia== TRUE){ 
+
+
+											while($row_send_to_amelia=mysqli_fetch_array($report_send_to_amelia))
+											{
+													// store each data from table: wp_amelia_providers_to_locations in variables
+															$ameliaId = $row_send_to_amelia['id'];
+
+															$userId = $row_send_to_amelia['userId'];	
+															$locationId = $row_send_to_amelia['locationId'];
+
+															// Select Table: willOnHairTableProvidersToLocations and isnert records coming from table: wp_amelia_providers_to_locations
+															$conn = mysqli_connect($sname, $uname, $password, $db_name);
+																	$qry="SELECT * FROM willOnHairTableProvidersToLocations WHERE ameliaCol='$ameliaId'";
+																	$rowCheck=mysqli_query($conn,$qry);
+																	if (mysqli_num_rows($rowCheck) > 0) { 
+																			
+																					
+																			} else{
+																			$qry = "INSERT INTO willOnHairTableProvidersToLocations (`ameliaCol`, `userId`, `locationId`)
+																			VALUES ('$ameliaId','$userId', '$locationId')"; 
+																			if (mysqli_query($conn,$qry)){ 
+																			
+																			}  
+															}
+											}
+									}
+			
+
+									//After receiving data from table: wp_amelia_providers_to_locations, next process to send it to the backend
+													$sql_table3="SELECT * FROM willOnHairTableProvidersToLocations";
+													$report_table3=mysqli_query($conn,$sql_table3);
+													if($report_table3== TRUE ){ 
+			
+													while($row_table3=mysqli_fetch_array($report_table3) )
+													{
+											
+															// select and store all records of table: willOnHairTableProvidersToLocations in variables
+
+															$willOnHairId = $row_table3['willOnHairCol'];
+															$ameliaId = $row_table3['ameliaCol'];
+															$userIdC = $row_table3['userId'];
+															$locationIdC = $row_table3['locationId'];
+			
+															// we bind fields from the backend with our variables of the Table: willOnHairTableProvidersToLocations in an array
+
+
+													// request header of our post to the backend
+													$curl = curl_init();
+
+													curl_setopt_array($curl, array(
+													  CURLOPT_URL => "$url/api/v1/users/$userIdC/locations/amelia?locationId=$locationIdC",
+													  CURLOPT_RETURNTRANSFER => true,
+													  CURLOPT_ENCODING => '',
+													  CURLOPT_MAXREDIRS => 10,
+													  CURLOPT_TIMEOUT => 0,
+													  CURLOPT_FOLLOWLOCATION => true,
+													  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+													  CURLOPT_CUSTOMREQUEST => 'POST',
+													  CURLOPT_HTTPHEADER => array(
+														'Content-Type: application/json'
+													  ),
+													));
+													
+													$response = curl_exec($curl);
+													
+													curl_close($curl);
+													// echo "<br> PL 1st post: $response<br>";
+
+
+											}
+
+																					
+					}
+	}
+	
+	//=============get from database and insert in amelia_locations ===============
+    public function Print_wp_amelia_providers_to_locations_insert($sname,$uname,$password,$db_name, $url){
+			$this->sname= $sname;
+			$this->uname=$uname;
+			$this->password =$password;
+			$this->db_name =$db_name;
+			$this->url =$url;
+	
+// we creat a connection
+	$conn = mysqli_connect($sname, $uname, $password, $db_name);			
+
+	// request header of our get from the backend
+	$curl = curl_init();
+	curl_setopt_array($curl, array(
+	CURLOPT_URL => "$url/api/v1/employees/provider/location",
+	CURLOPT_RETURNTRANSFER => true,
+	CURLOPT_ENCODING => '',
+	CURLOPT_MAXREDIRS => 10,
+	CURLOPT_TIMEOUT => 0,
+	CURLOPT_FOLLOWLOCATION => true,
+	CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+	CURLOPT_CUSTOMREQUEST => 'GET',
+	CURLOPT_HTTPHEADER => array(
+	'Content-Type: application/json'
+	),
+	));
+	
+	$response = curl_exec($curl);
+	$result = json_decode($response, true); // here we decode data coming from backend and store it as an array
+	curl_close($curl);
+	// echo "<br> PL 1st get: $response<br>";
+	
+	// we loop through our array and store eacch into variables
+	$i = 0;
+	while($i < count($result)) {
+	$willOnHairId = $result[$i]['id'];	
+	$ameliaId = $result[$i]['ameliaId'];
+	$locationId = $result[$i]['location']['ameliaId'];
+	
+	//we select all records from table: willOnHairTableProvidersToLocations with the particular key:ameliaCol
+	$conn = mysqli_connect($sname, $uname, $password, $db_name);			
+	$sql_First_get="SELECT * FROM willOnHairTableProvidersToLocations WHERE ameliaCol=$ameliaId";
+	$report_First_get=mysqli_query($conn,$sql_First_get);
+	
+
+	
+	if($report_First_get == TRUE){ 
+			// if the above key exist we update the records that concerns the key
+							$sql_updat_wilID="UPDATE `willOnHairTableProvidersToLocations` SET `willOnHairCol`='$willOnHairId' WHERE ameliaCol = '$ameliaId'";
+							$report_updat_wilID=mysqli_query($conn,$sql_updat_wilID);
+							if (mysqli_query($conn,$report_updat_wilID)){ 
+							
+							}  
+					
+			} else{
+					//if the above key does not exist we insert a new record of the non existing key
+					$insert_First_get = "INSERT INTO willOnHairTableProvidersToLocations(`willOnHairCol`, `ameliaCol`, `userId`, `locationId`) 
+					VALUES ('$willOnHairId', '$ameliaId', '$ameliaId','$locationId')"; 
+							if (mysqli_query($conn,$insert_First_get)){ 
+							}  
+			}
+	
+	
+	
+	
+	$i++;
+	}
+	
+	// we select table: willOnHairTableProvidersToLocations for the process of 
+	//generating amelia ids for the records coming from the backend by 
+	//inserting them into the table: wp_amelia_providers_to_locations
+	$conn = mysqli_connect($sname, $uname, $password, $db_name);			
+	$sql_send_to_amelia="SELECT * FROM willOnHairTableProvidersToLocations";
+	$report_send_to_amelia=mysqli_query($conn,$sql_send_to_amelia);
+
+	if($report_send_to_amelia== TRUE ){ 
+	while($row_send_to_amelia=mysqli_fetch_array($report_send_to_amelia))
+	{
+					// we store all its records into variables
+					$id = $row_send_to_amelia['id'];
+					$willOnHairId = $row_send_to_amelia['willOnHairCol'];	
+					$ameliaId = $row_send_to_amelia['ameliaCol'];
+
+					$userId = $row_send_to_amelia['userId'];	
+					$locationId = $row_send_to_amelia['locationId'];
+	
+			// check the record ameliaId if null or equal to 0 we insert the whole record into tablle:wp_amelia_providers_to_locations
+			if($ameliaId == NULL || $ameliaId == 0){ 
+					$send_to_amelia_category = "INSERT INTO wp_amelia_providers_to_locations(`userId`, `locationId`) 
+					VALUES ('$userId','$locationId')"; 
+					if (mysqli_query($conn,$send_to_amelia_category)){ 
+
+							//during each insert of each records form the while loop and the above 
+							//contion we collect the last id that was inserted into the table:wp_amelia_providers_to_locations so as to
+							//up the column: ameliaCol in th Table: willOnHairTableProvidersToLocations
+					$last_id = mysqli_insert_id($conn);
+					if( $last_id ==TRUE ){
+									$willOnHairTableProvidersToLocations_updateTable = "UPDATE `willOnHairTableProvidersToLocations` SET `ameliaCol`='$last_id' WHERE willOnHairCol = '$willOnHairId'";
+
+									if (mysqli_query($conn,$willOnHairTableProvidersToLocations_updateTable)){
+									$sql_second_post="SELECT * FROM willOnHairTableProvidersToLocations WHERE willOnHairCol = '$willOnHairId'";
+									$report_second_post=mysqli_query($conn,$sql_second_post);
+			
+									if($row_second_post=mysqli_fetch_array($report_second_post)){ 
+
+											$ameliaId_send = $row_second_post['ameliaCol'];
+	
+											$userId_send = $row_second_post['userId'];	
+											$locationId_send = $row_second_post['locationId'];
+
+									//After the column: ameliaCol in th Table: willOnHairTableProvidersToLocations is up to date
+									// we send the updated table:willOnHairTableProvidersToLocations to the backend
+									// $curl = curl_init();
+
+									// curl_setopt_array($curl, array(
+									//   CURLOPT_URL => "$url/api/v1/users/$userId_send/locations/amelia?locationId=$locationId_send",
+									//   CURLOPT_RETURNTRANSFER => true,
+									//   CURLOPT_ENCODING => '',
+									//   CURLOPT_MAXREDIRS => 10,
+									//   CURLOPT_TIMEOUT => 0,
+									//   CURLOPT_FOLLOWLOCATION => true,
+									//   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+									//   CURLOPT_CUSTOMREQUEST => 'POST',
+									//   CURLOPT_HTTPHEADER => array(
+									// 	'Content-Type: application/json'
+									//   ),
+									// ));
+									
+									// $response = curl_exec($curl);
+									
+									// curl_close($curl);
+									// echo "<br> PL 2st post: $response<br>";
+
+
+									}
+
+
+					}
+					
+
+					}
+					
+					}  
+
+
+			}
+			
+			}
+	}
+
+
+	// $query = "DROP table willOnHairTableProvidersToLocations";
+	// if (mysqli_multi_query($conn, $query)) {
+	//   echo "Dropped Successfully";
+	// } else {
+	//   echo "Error:" . mysqli_error($conn);
+	// }	
+	
+	// we display the final results of the table: wp_amelia_providers_to_locations 
+	//which now contains a sync data of wp_amelia_providers_to_locations and the backend 
+	$sql_table3="SELECT * FROM wp_amelia_providers_to_locations";
+	$report_table3=mysqli_query($conn,$sql_table3);
+	if($report_table3== TRUE){ 
+	echo "TABLE NAME: wp_amelia_providers_to_locations";
+	echo "<table border='5'>";
+	echo "<tr><th>id</th>
+	<th>userId</th><th>locationId</th></tr>";
+	
+	while($row_table3=mysqli_fetch_array($report_table3) )
+	{
+	
+	
+			echo "<tr><td>";									
+			echo$row_table3['id'];
+			echo "</td><td>";
+			echo$row_table3['userId'];
+			echo "</td><td>";
+			echo$row_table3['locationId'];
+			echo "</td></tr>";
+			echo"<tr></tr>";
+			echo"<tr></tr>";
+			echo"<tr></tr>";
+	
+	}
+	echo"</table>";
+	
+	}
+	
+	}
 
         //Categories get and post
         //============= post to database ======================
@@ -555,7 +854,7 @@ class PrintAmeliaTables {
 				//Verify if Table has been created
 						if ($report_sqlCreate === TRUE) {
 						}
-		
+
 						// Select and collect data from table: wp_amelia_providers_to_weekdays
 						$sql_send_to_amelia="SELECT * FROM wp_amelia_providers_to_weekdays";
 						$report_send_to_amelia=mysqli_query($conn,$sql_send_to_amelia);
@@ -583,8 +882,8 @@ class PrintAmeliaTables {
 														
 																
 														} else{
-														$qry = "INSERT INTO willOnHairTableWeeksdays (`ameliaCol`, `name`, `userId`, `dayIndex`, `startTime`, `endTime`)
-														VALUES ('$ameliaId', '$name', '$userId', '$dayIndex', '$startTime','$endTime')"; 
+														$qry = "INSERT INTO willOnHairTableWeeksdays (`ameliaCol`, `userId`, `dayIndex`, `startTime`, `endTime`)
+														VALUES ('$ameliaId', '$userId', '$dayIndex', '$startTime','$endTime')"; 
 														if (mysqli_query($conn,$qry)){ 
 														
 														}  
@@ -607,20 +906,21 @@ class PrintAmeliaTables {
 										$ameliaId = $row_table3['ameliaCol'];
 										$name = $row_table3['name'];
 										$userId = $row_table3['userId'];
+										
 										if( $row_table3['dayIndex'] == 1 ){
-											$dayIndex = "MONDAY`";
+											$dayIndex = 0;
 										} elseif( $row_table3['dayIndex'] == 2 ){
-												$dayIndex = "TUESDAY`";
+												$dayIndex = 1;
 										} elseif( $row_table3['dayIndex'] == 3 ){
-												$dayIndex = "WEDNESDAY`";
+												$dayIndex = 2;
 										} elseif( $row_table3['dayIndex'] == 4 ){
-												$dayIndex = "THURSDAY`";
+												$dayIndex = 3;
 										} elseif( $row_table3['dayIndex'] == 5 ){
-												$dayIndex = "FRIDAY`";
+												$dayIndex = 4;
 										} elseif( $row_table3['dayIndex'] == 6 ){
-												$dayIndex = "SATURDAY`";
+												$dayIndex = 5;
 										} elseif( $row_table3['dayIndex'] == 7 ){
-												$dayIndex = "SUNDAY`";
+												$dayIndex = 6;
 										}
 										$startTime = $row_table3['startTime'];
 										$endTime = $row_table3['endTime'];
@@ -631,8 +931,8 @@ class PrintAmeliaTables {
 												"ameliaId" => $ameliaId,
 												"name" =>  $name,
 												"day" =>  $dayIndex,
-												"start" =>  $startTime,
-												"end" =>  $endTime
+												"start" => strval($startTime),
+												"end" => strval($endTime)
 								];
 		
 		
@@ -641,7 +941,7 @@ class PrintAmeliaTables {
 								$curl = curl_init();
 		
 								curl_setopt_array($curl, array(
-								  CURLOPT_URL => "$url/api/v1/employees/$userId/week-days",
+								  CURLOPT_URL => "$url/api/v1/employees/$userId/week-days/amelia",
 								  CURLOPT_RETURNTRANSFER => true,
 								  CURLOPT_ENCODING => '',
 								  CURLOPT_MAXREDIRS => 10,
@@ -657,8 +957,8 @@ class PrintAmeliaTables {
 								
 								$response = curl_exec($curl);
 								
+								
 								curl_close($curl);
-								echo $response;
 		
 		
 						}
@@ -667,8 +967,420 @@ class PrintAmeliaTables {
 		}
 		}
 			
-	//=============get from database and insert in amelia_categories ===============
+	//=============get from database and insert in wp_amelia_providers_to_weekdays ===============
+
 	public function Print_wp_amelia_providers_to_weekdays_insert($sname,$uname,$password,$db_name, $url){
+		$this->sname= $sname;
+		$this->uname=$uname;
+		$this->password =$password;
+		$this->db_name =$db_name;
+		$this->url =$url;
+	  
+	  // we creat a connection
+	  $conn = mysqli_connect($sname, $uname, $password, $db_name);			
+	  
+	  // request header of our get from the backend
+	  $curl = curl_init();
+	  
+	  curl_setopt_array($curl, array(
+		CURLOPT_URL => "$url/api/v1/employees/week-days/amelia",
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_ENCODING => '',
+		CURLOPT_MAXREDIRS => 10,
+		CURLOPT_TIMEOUT => 0,
+		CURLOPT_FOLLOWLOCATION => true,
+		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		CURLOPT_CUSTOMREQUEST => 'GET',
+	  ));
+	  
+	  $response = curl_exec($curl);
+	  $result = json_decode($response, true); // here we decode data coming from backend and store it as an array
+	  curl_close($curl);
+
+
+	  
+	  // we loop through our array and store eacch into variables
+	  $i = 0;
+	  while($i < count($result)) {
+	  $willOnHairId = $result[$i]['id'];	
+	  $ameliaId = $result[$i]['ameliaId'];	
+	  $userId = $result[$i]['user']['ameliaId'];
+	  $name = $result[$i]['name'];
+	  // $day = $result[$i]['day'];
+	  
+	  if( $result[$i]['day'] == "MONDAY" ){
+		$dayIndex = 1;
+	  } elseif( $result[$i]['day'] == "TUESDAY" ){
+		  $dayIndex = 2;
+	  } elseif( $result[$i]['day'] == "WEDNESDAY" ){
+		  $dayIndex = 3;
+	  } elseif( $result[$i]['day'] == "THURSDAY" ){
+		  $dayIndex = 4;
+	  } elseif( $result[$i]['day'] == "FRIDAY" ){
+		  $dayIndex = 5;
+	  } elseif( $result[$i]['day'] == "SATURDAY" ){
+		  $dayIndex = 6;
+	  } elseif( $result[$i]['day'] == "SUNDAY" ){
+		  $dayIndex = 7;
+	  }
+	  
+	  $start = $result[$i]['start'];
+	  $end = $result[$i]['end'];
+	  
+	  //we select all records from table: willOnHairTableWeeksdays with the particular key:ameliaCol
+	  $conn = mysqli_connect($sname, $uname, $password, $db_name);			
+	  $sql_First_get="SELECT * FROM willOnHairTableWeeksdays WHERE ameliaCol=$ameliaId";
+	  $report_First_get=mysqli_query($conn,$sql_First_get);
+	  
+	  
+	  
+	  if($report_First_get == TRUE){ 
+		// if the above key exist we update the records that concerns the key
+				$sql_updat_wilID="UPDATE `willOnHairTableWeeksdays` SET `willOnHairCol`='$willOnHairId' WHERE ameliaCol = '$ameliaId'";
+				$report_updat_wilID=mysqli_query($conn,$sql_updat_wilID);
+				if (mysqli_query($conn,$report_updat_wilID)){ 
+				
+				}  
+			
+		} else{
+			//if the above key does not exist we insert a new record of the non existing key
+			$insert_First_get = "INSERT INTO willOnHairTableWeeksdays(`willOnHairCol`, `ameliaCol`, `name`, `userId`, `dayIndex`, `startTime`, `endTime`) 
+			VALUES ('$willOnHairId', '$ameliaId', '$name', '$userId','$dayIndex','$start','$end')"; 
+				if (mysqli_query($conn,$insert_First_get)){ 
+				}  
+		}
+	  
+	  
+	  
+	  
+	  $i++;
+	  }
+	  
+	  // we select table: willOnHairTableWeeksdays for the process of 
+	  //generating amelia ids for the records coming from the backend by 
+	  //inserting them into the table: wp_amelia_providers_to_weekdays
+	  $conn = mysqli_connect($sname, $uname, $password, $db_name);			
+	  $sql_send_to_amelia="SELECT * FROM willOnHairTableWeeksdays";
+	  $report_send_to_amelia=mysqli_query($conn,$sql_send_to_amelia);
+	  
+	  if($report_send_to_amelia== TRUE ){ 
+	  while($row_send_to_amelia=mysqli_fetch_array($report_send_to_amelia))
+	  {
+			// we store all its records into variables
+			$id = $row_send_to_amelia['id'];
+			$willOnHairId = $row_send_to_amelia['willOnHairCol'];	
+			$ameliaId = $row_send_to_amelia['ameliaCol'];
+	  
+			$userId = $row_send_to_amelia['userId'];	
+			$dayIndex = $row_send_to_amelia['dayIndex'];
+	  
+			$start = $row_send_to_amelia['startTime'];
+			$end = $row_send_to_amelia['endTime'];
+	  
+	  
+		// check the record ameliaId if null or equal to 0 we insert the whole record into tablle:wp_amelia_providers_to_weekdays
+		if($ameliaId == NULL || $ameliaId == 0){ 
+			$send_to_amelia_category = "INSERT INTO wp_amelia_providers_to_weekdays(`userId`, `dayIndex`, `startTime`, `endTime`) 
+			VALUES ('$userId','$dayIndex','$start','$end')"; 
+			if (mysqli_query($conn,$send_to_amelia_category)){ 
+	  
+				//during each insert of each records form the while loop and the above 
+				//contion we collect the last id that was inserted into the table:wp_amelia_providers_to_weekdays so as to
+				//up the column: ameliaCol in th Table: willOnHairTableWeeksdays
+			$last_id = mysqli_insert_id($conn);
+			if( $last_id ==TRUE ){
+					$willOnHairTableWeeksdays_updateTable	= "UPDATE `willOnHairTableWeeksdays` SET `ameliaCol`='$last_id' WHERE willOnHairCol = '$willOnHairId'";
+	  
+					if (mysqli_query($conn,$willOnHairTableWeeksdays_updateTable)){
+					$sql_second_post="SELECT * FROM willOnHairTableWeeksdays WHERE willOnHairCol = '$willOnHairId'";
+					$report_second_post=mysqli_query($conn,$sql_second_post);
+		
+					if($row_second_post=mysqli_fetch_array($report_second_post)){ 
+	  
+						$ameliaId_send = $row_second_post['ameliaCol'];
+	  
+						$userId_send = $row_second_post['userId'];	
+	  
+						if( $row_second_post['dayIndex'] == 1 ){
+						  $dayIndex = 0;
+						} elseif( $row_second_post['dayIndex'] == 2 ){
+							$dayIndex_send = 1;
+						} elseif( $row_second_post['dayIndex'] == 3 ){
+							$dayIndex_send = 2;
+						} elseif( $row_second_post['dayIndex'] == 4 ){
+							$dayIndex_send = 3;
+						} elseif( $row_second_post['dayIndex'] == 5 ){
+							$dayIndex_send = 4;
+						} elseif( $row_second_post['dayIndex'] == 6 ){
+							$dayIndex_send = 5;
+						} elseif( $row_second_post['dayIndex'] == 7 ){
+							$dayIndex_send = 6;
+						}
+	  
+						$startTime_send = $row_second_post['startTime'];
+						$endTime_send = $row_second_post['endTime'];
+	  
+					//After the column: ameliaCol in th Table: willOnHairTableWeeksdays is up to date
+					// we send the updated table:willOnHairTableWeeksdays to the backend
+					$secondPostWeekdays = [ 
+						"id" => $willOnHairId,
+						"ameliaId" => $ameliaId_send,
+						"name" =>  $name,
+						"day" =>  $dayIndex_send,
+						"start" => strval($startTime_send),
+						"end" => strval($endTime_send)
+				];
+	  
+					$curl = curl_init();
+					
+					curl_setopt_array($curl, array(
+					  CURLOPT_URL => "$url/api/v1/employees/$userId_send/week-days/amelia",
+					  CURLOPT_RETURNTRANSFER => true,
+					  CURLOPT_ENCODING => '',
+					  CURLOPT_MAXREDIRS => 10,
+					  CURLOPT_TIMEOUT => 0,
+					  CURLOPT_FOLLOWLOCATION => true,
+					  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+					  CURLOPT_CUSTOMREQUEST => 'POST',
+					  CURLOPT_POSTFIELDS => json_encode($secondPostWeekdays),
+					  CURLOPT_HTTPHEADER => array(
+						'Content-Type: application/json'
+					  ),
+					));
+
+					
+					$response = curl_exec($curl);
+	  
+				curl_close($curl);
+	  
+	  
+					}
+	  
+	  
+			}
+			
+	  
+			}
+			
+			}  
+	  
+	  
+		}
+		
+		}
+	  }
+	  
+	  
+	  // $query = "DROP table willOnHairTableWeeksdays";
+	  // if (mysqli_multi_query($conn, $query)) {
+	  //   echo "Dropped Successfully";
+	  // } else {
+	  //   echo "Error:" . mysqli_error($conn);
+	  // }	
+	  
+	  // we display the final results of the table: wp_amelia_providers_to_weekdays 
+	  //which now contains a sync data of wp_amelia_providers_to_weekdays and the backend 
+	  $sql_table3="SELECT * FROM wp_amelia_providers_to_weekdays";
+	  $report_table3=mysqli_query($conn,$sql_table3);
+	  if($report_table3== TRUE){ 
+	  echo "TABLE NAME: wp_amelia_providers_to_weekdays";
+	  echo "<table border='5'>";
+	  echo "<tr><th>id</th>
+	  <th>userId</th><th>dayIndex</th><th>startTime</th>
+	  <th>endTime</th></tr>";
+	  
+	  while($view_table3=mysqli_fetch_array($report_table3) )
+	  {
+	  
+	  
+		echo "<tr><td>";									
+		echo$view_table3['id'];
+		echo "</td><td>";
+		echo$view_table3['userId'];
+		echo "</td><td>";
+		echo$view_table3['dayIndex'];
+		echo "</td><td>";
+		echo$view_table3['startTime'];
+		echo "</td><td>";									
+		echo$view_table3['endTime'];
+		echo "</td></tr>";
+		echo"<tr></tr>";
+		echo"<tr></tr>";
+		echo"<tr></tr>";
+	  
+	  }
+	  echo"</table>";
+	  
+	  }
+	  
+	  }
+			
+
+	  		//Categories get and post
+		//============= post to database ======================
+	 	public function Print_wp_amelia_providers_to_periods_post($sname,$uname,$password,$db_name, $url){
+			$this->sname= $sname;
+			$this->uname=$uname;
+			$this->password =$password;
+			$this->db_name =$db_name;
+			$this->url =$url;
+			
+			
+									
+									//connect to database
+									$conn = mysqli_connect($sname, $uname, $password, $db_name);
+									
+									//Create New Table for categories sync
+									$sqlCreate = "CREATE TABLE willOnHairTableProviderToPeriod(
+											`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+											`willOnHairCol` INT NOT NULL DEFAULT 0,
+											`ameliaCol` INT NOT NULL,
+											`weekDayId` int NOT NULL,
+											`locationId` int DEFAULT NULL,
+											`startTime` time NOT NULL,
+											`endTime` time NOT NULL
+									)";
+									
+											$report_sqlCreate=mysqli_query($conn,$sqlCreate);
+									//Verify if Table has been created
+											if ($report_sqlCreate === TRUE) {
+											}
+
+											// Select and collect data from table: wp_amelia_providers_to_periods
+											$sql_send_to_amelia="SELECT * FROM wp_amelia_providers_to_periods";
+											$report_send_to_amelia=mysqli_query($conn,$sql_send_to_amelia);
+
+											if($report_send_to_amelia== TRUE){ 
+
+
+											while($row_send_to_amelia=mysqli_fetch_array($report_send_to_amelia))
+											{
+													// store each data from table: wp_amelia_providers_to_periods in variables
+															$ameliaId = $row_send_to_amelia['id'];
+
+															$weekDayId = $row_send_to_amelia['weekDayId'];	
+															$locationId = $row_send_to_amelia['locationId'];
+
+															$startTime = $row_send_to_amelia['startTime'];
+															$endTime = $row_send_to_amelia['endTime'];
+							
+
+															// Select Table: willOnHairTableProviderToPeriod and isnert records coming from table: wp_amelia_providers_to_periods
+															$conn = mysqli_connect($sname, $uname, $password, $db_name);
+																	$qry="SELECT * FROM willOnHairTableProviderToPeriod WHERE ameliaCol='$ameliaId'";
+																	$rowCheck=mysqli_query($conn,$qry);
+																	if (mysqli_num_rows($rowCheck) > 0) { 
+																			
+																					
+																			} else{
+																			$qry = "INSERT INTO willOnHairTableProviderToPeriod (`ameliaCol`,  `weekDayId`, `locationId`, `startTime`, `endTime`)
+																			VALUES ('$ameliaId','$weekDayId', '$locationId', '$startTime','$endTime')"; 
+																			if (mysqli_query($conn,$qry)){ 
+																			
+																			}  
+															}
+											}
+									}
+			
+
+									//After receiving data from table: wp_amelia_providers_to_periods, next process to send it to the backend
+													$sql_table3="SELECT * FROM willOnHairTableProviderToPeriod";
+													$report_table3=mysqli_query($conn,$sql_table3);
+													if($report_table3== TRUE ){ 
+			
+													while($row_table3=mysqli_fetch_array($report_table3) )
+													{
+											
+															// select and store all records of table: willOnHairTableProviderToPeriod in variables
+
+															$willOnHairId = $row_table3['willOnHairCol'];
+															$ameliaId = $row_table3['ameliaCol'];
+															$weekDayIdC = $row_table3['weekDayId'];
+															$locationIdC = $row_table3['locationId'];
+															$startTimeC = $row_table3['startTime'];
+															$endTimeC = $row_table3['endTime'];
+															// echo "<br> loceeeeeeeeeeeeeeeeeee: $locationIdC<br>";
+
+			
+															// we bind fields from the backend with our variables of the Table: willOnHairTableProviderToPeriod in an array
+															
+															
+															$postPP = [ 
+																	"id" => $willOnHairId,
+																	"ameliaId" => $ameliaId,
+																	"startTime" => $startTimeC,
+																	"endTime" => $endTimeC,
+													];
+
+													// request header of our post to the backend
+
+													if($locationIdC == 0 || $locationIdC == null) {
+
+
+														//  echo "<br> if: $locationIdC<br>";
+
+
+														$curl = curl_init();
+															
+														curl_setopt_array($curl, array(
+																CURLOPT_URL => "$url/api/v1/employees/week-days/$weekDayIdC/periods/amelia?locationId=",
+																CURLOPT_RETURNTRANSFER => true,
+																CURLOPT_ENCODING => '',
+																CURLOPT_MAXREDIRS => 1,
+																CURLOPT_TIMEOUT => 0,
+																CURLOPT_FOLLOWLOCATION => true,
+																CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+																CURLOPT_CUSTOMREQUEST => 'POST',
+																CURLOPT_POSTFIELDS => json_encode($postPP),//here we convert our array to a json format
+																CURLOPT_HTTPHEADER => array(
+																'Content-Type: application/json'
+																),
+														));
+														
+														$response = curl_exec($curl);
+		
+												curl_close($curl);
+
+												// echo "<br> if: $response<br>";
+													} else {
+
+														// echo "<br> else: $locationIdC<br>";
+
+														$curl = curl_init();
+															
+														curl_setopt_array($curl, array(
+																CURLOPT_URL => "$url/api/v1/employees/week-days/$weekDayIdC/periods/amelia?locationId=$locationIdC",
+																CURLOPT_RETURNTRANSFER => true,
+																CURLOPT_ENCODING => '',
+																CURLOPT_MAXREDIRS => 1,
+																CURLOPT_TIMEOUT => 0,
+																CURLOPT_FOLLOWLOCATION => true,
+																CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+																CURLOPT_CUSTOMREQUEST => 'POST',
+																CURLOPT_POSTFIELDS => json_encode($postPP),//here we convert our array to a json format
+																CURLOPT_HTTPHEADER => array(
+																'Content-Type: application/json'
+																),
+														));
+														
+														$response = curl_exec($curl);
+		
+												curl_close($curl);
+												// echo "<br> else: $response<br>";
+														
+													}
+
+															
+
+
+											}
+
+																					
+					}
+	}
+	
+	//=============get from database and insert in amelia_categories ===============
+	public function Print_wp_amelia_providers_to_periods_insert($sname,$uname,$password,$db_name, $url){
 			$this->sname= $sname;
 			$this->uname=$uname;
 			$this->password =$password;
@@ -681,7 +1393,7 @@ class PrintAmeliaTables {
 	// request header of our get from the backend
 	$curl = curl_init();
 	curl_setopt_array($curl, array(
-	CURLOPT_URL => "$url/api/v1/categories",
+	CURLOPT_URL => "$url/api/v1/employees/periods",
 	CURLOPT_RETURNTRANSFER => true,
 	CURLOPT_ENCODING => '',
 	CURLOPT_MAXREDIRS => 10,
@@ -703,21 +1415,21 @@ class PrintAmeliaTables {
 	while($i < count($result)) {
 	$willOnHairId = $result[$i]['id'];	
 	$ameliaId = $result[$i]['ameliaId'];	
-	$status = $result[$i]['status'];
-	$name = $result[$i]['name'];
-	$position = $result[$i]['position'];
-	$translations = $result[$i]['translations'];
+	$weekDayId = $result[$i]['weekDays']['ameliaId'];
+	$locationId = $result[$i]['location']['ameliaId'];
+	$startTime = $result[$i]['startTime'];
+	$endTime = $result[$i]['endTime'];
 	
-	//we select all records from table: willOnHairTableWeeksdays with the particular key:ameliaCol
+	//we select all records from table: willOnHairTableProviderToPeriod with the particular key:ameliaCol
 	$conn = mysqli_connect($sname, $uname, $password, $db_name);			
-	$sql_First_get="SELECT * FROM willOnHairTableWeeksdays WHERE ameliaCol=$ameliaId";
+	$sql_First_get="SELECT * FROM willOnHairTableProviderToPeriod WHERE ameliaCol=$ameliaId";
 	$report_First_get=mysqli_query($conn,$sql_First_get);
 	
 
 	
 	if($report_First_get == TRUE){ 
 			// if the above key exist we update the records that concerns the key
-							$sql_updat_wilID="UPDATE `willOnHairTableWeeksdays` SET `willOnHairCol`='$willOnHairId' WHERE ameliaCol = '$ameliaId'";
+							$sql_updat_wilID="UPDATE `willOnHairTableProviderToPeriod` SET `willOnHairCol`='$willOnHairId' WHERE ameliaCol = '$ameliaId'";
 							$report_updat_wilID=mysqli_query($conn,$sql_updat_wilID);
 							if (mysqli_query($conn,$report_updat_wilID)){ 
 							
@@ -725,8 +1437,8 @@ class PrintAmeliaTables {
 					
 			} else{
 					//if the above key does not exist we insert a new record of the non existing key
-					$insert_First_get = "INSERT INTO willOnHairTableWeeksdays(`willOnHairCol`, `ameliaCol`, `status`, `name`, `position`, `translations`) 
-					VALUES ('$willOnHairId', '$ameliaId', '$status','$name','$position','$translations')"; 
+					$insert_First_get = "INSERT INTO willOnHairTableProviderToPeriod(`willOnHairCol`, `ameliaCol`, `weekDayId`, `locationId`, `startTime`, `endTime`) 
+					VALUES ('$willOnHairId', '$ameliaId', '$weekDayId','$locationId','$startTime','$endTime')"; 
 							if (mysqli_query($conn,$insert_First_get)){ 
 							}  
 			}
@@ -737,11 +1449,11 @@ class PrintAmeliaTables {
 	$i++;
 	}
 	
-	// we select table: willOnHairTableWeeksdays for the process of 
+	// we select table: willOnHairTableProviderToPeriod for the process of 
 	//generating amelia ids for the records coming from the backend by 
-	//inserting them into the table: wp_amelia_providers_to_weekdays
+	//inserting them into the table: wp_amelia_providers_to_periods
 	$conn = mysqli_connect($sname, $uname, $password, $db_name);			
-	$sql_send_to_amelia="SELECT * FROM willOnHairTableWeeksdays";
+	$sql_send_to_amelia="SELECT * FROM willOnHairTableProviderToPeriod";
 	$report_send_to_amelia=mysqli_query($conn,$sql_send_to_amelia);
 
 	if($report_send_to_amelia== TRUE ){ 
@@ -752,73 +1464,97 @@ class PrintAmeliaTables {
 					$willOnHairId = $row_send_to_amelia['willOnHairCol'];	
 					$ameliaId = $row_send_to_amelia['ameliaCol'];
 
-					$status = $row_send_to_amelia['status'];	
-					$name = $row_send_to_amelia['name'];
+					$weekDayId = $row_send_to_amelia['weekDayId'];	
+					$locationId = $row_send_to_amelia['locationId'];
 
-					$position = $row_send_to_amelia['position'];
-					$translations = $row_send_to_amelia['translations'];
+					$startTime = $row_send_to_amelia['startTime'];
+					$endTime = $row_send_to_amelia['endTime'];
 
 	
-			// check the record ameliaId if null or equal to 0 we insert the whole record into tablle:wp_amelia_providers_to_weekdays
+			// check the record ameliaId if null or equal to 0 we insert the whole record into tablle:wp_amelia_providers_to_periods
 			if($ameliaId == NULL || $ameliaId == 0){ 
-					$send_to_amelia_category = "INSERT INTO wp_amelia_providers_to_weekdays(`status`, `name`, `position`, `translations`) 
-					VALUES ('$status','$name','$id','$translations')"; 
+					$send_to_amelia_category = "INSERT INTO wp_amelia_providers_to_periods (`weekDayId`, `locationId`, `startTime`, `endTime`) 
+					VALUES ('$weekDayId','$locationId','$startTime','$endTime')"; 
 					if (mysqli_query($conn,$send_to_amelia_category)){ 
 
 							//during each insert of each records form the while loop and the above 
-							//contion we collect the last id that was inserted into the table:wp_amelia_providers_to_weekdays so as to
-							//up the column: ameliaCol in th Table: willOnHairTableWeeksdays
+							//contion we collect the last id that was inserted into the table:wp_amelia_providers_to_periods so as to
+							//up the column: ameliaCol in th Table: willOnHairTableProviderToPeriod
 					$last_id = mysqli_insert_id($conn);
 					if( $last_id ==TRUE ){
-									$willOnHairTableWeeksdays_updateTable	= "UPDATE `willOnHairTableWeeksdays` SET `ameliaCol`='$last_id' WHERE willOnHairCol = '$willOnHairId'";
+									$willOnHairTableProviderToPeriod_updateTable	= "UPDATE `willOnHairTableProviderToPeriod` SET `ameliaCol`='$last_id' WHERE willOnHairCol = '$willOnHairId'";
 
-									if (mysqli_query($conn,$willOnHairTableWeeksdays_updateTable)){
-									$sql_second_post="SELECT * FROM willOnHairTableWeeksdays WHERE willOnHairCol = '$willOnHairId'";
+									if (mysqli_query($conn,$willOnHairTableProviderToPeriod_updateTable)){
+									$sql_second_post="SELECT * FROM willOnHairTableProviderToPeriod WHERE willOnHairCol = '$willOnHairId'";
 									$report_second_post=mysqli_query($conn,$sql_second_post);
 			
 									if($row_second_post=mysqli_fetch_array($report_second_post)){ 
 
 											$ameliaId_send = $row_second_post['ameliaCol'];
 	
-											$status_send = $row_second_post['status'];	
-											$name_send = $row_second_post['name'];
+											$weekDayId_send = $row_second_post['weekDayId'];	
+											$locationId_send = $row_second_post['locationId'];
 	
-											$position_send = $row_second_post['position'];
-											$translations_send = $row_second_post['translations'];
+											$startTime_send = $row_second_post['startTime'];
+											$endTime_send = $row_second_post['endTime'];
 
-									//After the column: ameliaCol in th Table: willOnHairTableWeeksdays is up to date
-									// we send the updated table:willOnHairTableWeeksdays to the backend
-									$postCategory = [ 
+									//After the column: ameliaCol in th Table: willOnHairTableProviderToPeriod is up to date
+									// we send the updated table:willOnHairTableProviderToPeriod to the backend
+									$secondPostPP = [ 
 											"id" => $willOnHairId,
 											"ameliaId" => $ameliaId_send,
-											"status" => strtoupper($status_send),
-											"name" => $name_send,
-											"position" => $position_send,
-											"translations" => $translations_send,
-											"image" => "string33333",
-											"note" => "string33333"
+											"startTime" => $startTime_send,
+											"endTime" => $endTime_send
 							];
 
-									$curl = curl_init();
-									
-									curl_setopt_array($curl, array(
-											CURLOPT_URL => "$url/api/v1/categories",
-											CURLOPT_RETURNTRANSFER => true,
-											CURLOPT_ENCODING => '',
-											CURLOPT_MAXREDIRS => 1,
-											CURLOPT_TIMEOUT => 0,
-											CURLOPT_FOLLOWLOCATION => true,
-											CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-											CURLOPT_CUSTOMREQUEST => 'POST',
-											CURLOPT_POSTFIELDS => json_encode($postCategory),
-											CURLOPT_HTTPHEADER => array(
-											'Content-Type: application/json'
-											),
-									));
-									
-									$response = curl_exec($curl);
+								if($locationId_send == 0 || $locationId_send == null ) {
+										$curl = curl_init();
+											
+										curl_setopt_array($curl, array(
+												CURLOPT_URL => "$url/api/v1/employees/week-days/$weekDayId_send/periods/amelia?locationId=",
+												CURLOPT_RETURNTRANSFER => true,
+												CURLOPT_ENCODING => '',
+												CURLOPT_MAXREDIRS => 1,
+												CURLOPT_TIMEOUT => 0,
+												CURLOPT_FOLLOWLOCATION => true,
+												CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+												CURLOPT_CUSTOMREQUEST => 'POST',
+												CURLOPT_POSTFIELDS => json_encode($secondPostPP),//here we convert our array to a json format
+												CURLOPT_HTTPHEADER => array(
+												'Content-Type: application/json'
+												),
+										));
+										
+										$response = curl_exec($curl);
 
-							curl_close($curl);
+								curl_close($curl);
+								// echo "<br> if : $response<br>";
+									} else {
+										$curl = curl_init();
+											
+										curl_setopt_array($curl, array(
+												CURLOPT_URL => "$url/api/v1/employees/week-days/$weekDayId_send/periods/amelia?locationId=$locationId_send",
+												CURLOPT_RETURNTRANSFER => true,
+												CURLOPT_ENCODING => '',
+												CURLOPT_MAXREDIRS => 1,
+												CURLOPT_TIMEOUT => 0,
+												CURLOPT_FOLLOWLOCATION => true,
+												CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+												CURLOPT_CUSTOMREQUEST => 'POST',
+												CURLOPT_POSTFIELDS => json_encode($secondPostPP),//here we convert our array to a json format
+												CURLOPT_HTTPHEADER => array(
+												'Content-Type: application/json'
+												),
+										));
+										
+										$response = curl_exec($curl);
+
+								curl_close($curl);
+								// echo "<br> else : $response<br>";
+
+										
+									}
+
 
 
 									}
@@ -838,23 +1574,23 @@ class PrintAmeliaTables {
 	}
 
 
-	// $query = "DROP table willOnHairTableWeeksdays";
+	// $query = "DROP table willOnHairTableProviderToPeriod";
 	// if (mysqli_multi_query($conn, $query)) {
 	//   echo "Dropped Successfully";
 	// } else {
 	//   echo "Error:" . mysqli_error($conn);
 	// }	
 	
-	// we display the final results of the table: wp_amelia_providers_to_weekdays 
-	//which now contains a sync data of wp_amelia_providers_to_weekdays and the backend 
-	$sql_table3="SELECT * FROM wp_amelia_providers_to_weekdays";
+	// we display the final results of the table: wp_amelia_providers_to_periods 
+	//which now contains a sync data of wp_amelia_providers_to_periods and the backend 
+	$sql_table3="SELECT * FROM wp_amelia_providers_to_periods";
 	$report_table3=mysqli_query($conn,$sql_table3);
 	if($report_table3== TRUE){ 
-	echo "TABLE NAME: wp_amelia_providers_to_weekdays";
+	echo "TABLE locationId: wp_amelia_providers_to_periods";
 	echo "<table border='5'>";
 	echo "<tr><th>id</th>
-	<th>status</th><th>name</th><th>position</th>
-	<th>translations</th></tr>";
+	<th>weekDayId</th><th>locationId</th><th>startTime</th>
+	<th>endTime</th></tr>";
 	
 	while($row_table3=mysqli_fetch_array($report_table3) )
 	{
@@ -863,13 +1599,13 @@ class PrintAmeliaTables {
 			echo "<tr><td>";									
 			echo$row_table3['id'];
 			echo "</td><td>";
-			echo$row_table3['status'];
+			echo$row_table3['weekDayId'];
 			echo "</td><td>";
-			echo$row_table3['name'];
+			echo$row_table3['locationId'];
 			echo "</td><td>";
-			echo$row_table3['position'];
+			echo$row_table3['startTime'];
 			echo "</td><td>";									
-			echo$row_table3['translations'];
+			echo$row_table3['endTime'];
 			echo "</td></tr>";
 			echo"<tr></tr>";
 			echo"<tr></tr>";
@@ -881,7 +1617,7 @@ class PrintAmeliaTables {
 	}
 	
 	}
-			
+
 
 
 		//Locations get and post
@@ -1073,6 +1809,7 @@ class PrintAmeliaTables {
 		$response = curl_exec($curl);
 		$result = json_decode($response, true); // here we decode data coming from backend and store it as an array
 		curl_close($curl);
+//  echo "get cat <br> ======= $response ======= <br>";
 
 		// we loop through our array and store eacch into variables
 		$i = 0;
@@ -2284,17 +3021,17 @@ class PrintAmeliaTables {
 
 	//providers_to_services get and post
 		//============= post to database ======================
-		public function Print_wp_amelia_providers_to_services_post($sserviceId,$userviceId,$password,$db_serviceId, $url){
-			$this->sserviceId= $sserviceId;
-			$this->userviceId=$userviceId;
+		public function Print_wp_amelia_providers_to_services_post($sname,$uname,$password,$db_name, $url){
+			$this->sname= $sname;
+			$this->uname=$uname;
 			$this->password =$password;
-			$this->db_serviceId =$db_serviceId;
+			$this->db_name =$db_name;
 			$this->url =$url;
 			
 			
 				  
 				  //connect to database
-				  $conn = mysqli_connect($sserviceId, $userviceId, $password, $db_serviceId);
+				  $conn = mysqli_connect($sname, $uname, $password, $db_name);
 				  
 				  //Create New Table for providers_to_services sync
 				  $sqlCreate = "CREATE TABLE willOnHairTableProviderToServices(
@@ -2338,7 +3075,7 @@ class PrintAmeliaTables {
 				
 		
 						// Select Table: willOnHairTableProviderToServices and isnert records coming from table: wp_amelia_providers_to_services
-						$conn = mysqli_connect($sserviceId, $userviceId, $password, $db_serviceId);
+						$conn = mysqli_connect($sname, $uname, $password, $db_name);
 						  $qry="SELECT * FROM willOnHairTableProviderToServices WHERE ameliaCol='$ameliaId'";
 						  $rowCheck=mysqli_query($conn,$qry);
 						  if (mysqli_num_rows($rowCheck) > 0) { 
@@ -2414,15 +3151,15 @@ class PrintAmeliaTables {
 		  }
 		  
 		  //=============get from database and insert in amelia_providers_to_services ===============
-		  public function Print_wp_amelia_providers_to_services_insert($sserviceId,$userviceId,$password,$db_serviceId, $url){
-			$this->sserviceId= $sserviceId;
-			$this->userviceId=$userviceId;
+		  public function Print_wp_amelia_providers_to_services_insert($sname,$uname,$password,$db_name, $url){
+			$this->sname= $sname;
+			$this->uname=$uname;
 			$this->password =$password;
-			$this->db_serviceId =$db_serviceId;
+			$this->db_name =$db_name;
 			$this->url =$url;
 		  
 		// we creat a connection
-		  $conn = mysqli_connect($sserviceId, $userviceId, $password, $db_serviceId);			
+		  $conn = mysqli_connect($sname, $uname, $password, $db_name);			
 		
 		  // request header of our get from the backend
 		  $curl = curl_init();
@@ -2457,7 +3194,7 @@ class PrintAmeliaTables {
 		  $customPricing = $result[$i]['minCapacity'];
 		  
 		  //we select all records from table: willOnHairTableProviderToServices with the particular key:ameliaCol
-		  $conn = mysqli_connect($sserviceId, $userviceId, $password, $db_serviceId);			
+		  $conn = mysqli_connect($sname, $uname, $password, $db_name);			
 		  $sql_First_get="SELECT * FROM willOnHairTableProviderToServices WHERE ameliaCol=$ameliaId";
 		  $report_First_get=mysqli_query($conn,$sql_First_get);
 		  
@@ -2488,7 +3225,7 @@ class PrintAmeliaTables {
 		  // we select table: willOnHairTableProviderToServices for the process of 
 		  //generating amelia ids for the records coming from the backend by 
 		  //inserting them into the table: wp_amelia_providers_to_services
-		  $conn = mysqli_connect($sserviceId, $userviceId, $password, $db_serviceId);			
+		  $conn = mysqli_connect($sname, $uname, $password, $db_name);			
 		  $sql_send_to_amelia="SELECT * FROM willOnHairTableProviderToServices";
 		  $report_send_to_amelia=mysqli_query($conn,$sql_send_to_amelia);
 		
@@ -2640,589 +3377,1380 @@ class PrintAmeliaTables {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-public function Print_wp_amelia_providers_to_weekdays($sname,$uname,$password,$db_name, $url){
-		$this->sname= $sname;
-		$this->uname=$uname;
-		$this->password =$password;
-		$this->db_name =$db_name;
-		$this->url =$url;
-		  
-		  //connect to database
-		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
-		  
-		
-		  $sql_table_wp_amelia_providers_to_weekdays="SELECT * FROM wp_amelia_providers_to_weekdays";
-		  $report_table_wp_amelia_providers_to_weekdays=mysqli_query($conn,$sql_table_wp_amelia_providers_to_weekdays);
-		  if($report_table_wp_amelia_providers_to_weekdays== TRUE){ 
-		  echo "TABLE NAME: wp_amelia_providers_to_weekdays";
-		  echo "<table border='5'>";
-		  echo "<tr>
-		  <th>id</th>
-		  <th>userId</th>  <th>dayIndex</th>  <th>startTime</th> <th>endTime</th></tr>";
-		
-		  while($row_table_wp_amelia_providers_to_weekdays=mysqli_fetch_array($report_table_wp_amelia_providers_to_weekdays) )
-		  {
-		
-		  
-		  echo "<td>";									
-		  echo$row_table_wp_amelia_providers_to_weekdays['id'];
-		  echo "</td><td>";
-		  echo$row_table_wp_amelia_providers_to_weekdays['userId'];
-		  echo "</td><td>";
-		  echo$row_table_wp_amelia_providers_to_weekdays['dayIndex'];
-		  echo "</td><td>";
-		  echo$row_table_wp_amelia_providers_to_weekdays['startTime'];
-		  echo "</td><td>";
-		  echo$row_table_wp_amelia_providers_to_weekdays['endTime'];
-		  echo "</td></tr>";
-		  
-		  
-		  }
-		  echo"</table>";
-		  
-		  }
-		  }	
+		//Locations get and post
+		//============= post to database ======================
+		public function Print_wp_amelia_appointments_post($sname, $uname, $password, $db_name, $url)
+		{
+		  $this->sname = $sname;
+		  $this->uname = $uname;
+		  $this->password = $password;
+		  $this->db_name = $db_name;
+		  $this->url = $url;
 	  
-
-
-
-public function Print_wp_amelia_providers_to_periods($sname,$uname,$password,$db_name, $url){
-		$this->sname= $sname;
-		$this->uname=$uname;
-		$this->password =$password;
-		$this->db_name =$db_name;
-		$this->url =$url;
-		  
+	  
+	  
 		  //connect to database
 		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
-		  
-		
-		  $sql_table_wp_amelia_providers_to_periods="SELECT * FROM wp_amelia_providers_to_periods";
-		  $report_table_wp_amelia_providers_to_periods=mysqli_query($conn,$sql_table_wp_amelia_providers_to_periods);
-		  if($report_table_wp_amelia_providers_to_periods== TRUE){ 
-		  echo "TABLE NAME: wp_amelia_providers_to_periods";
-		  echo "<table border='5'>";
-		  echo "<tr>
-		  <th>id</th>
-		  <th>weekDayId</th>  <th>locationId</th>  <th>startTime</th> <th>endTime</th></tr>";
-		
-		  while($row_table_wp_amelia_providers_to_periods=mysqli_fetch_array($report_table_wp_amelia_providers_to_periods) )
-		  {
-		
-		  
-		  echo "<td>";									
-		  echo$row_table_wp_amelia_providers_to_periods['id'];
-		  echo "</td><td>";
-		  echo$row_table_wp_amelia_providers_to_periods['weekDayId'];
-		  echo "</td><td>";
-		  echo$row_table_wp_amelia_providers_to_periods['locationId'];
-		  echo "</td><td>";
-		  echo$row_table_wp_amelia_providers_to_periods['startTime'];
-		  echo "</td><td>";
-		  echo$row_table_wp_amelia_providers_to_periods['endTime'];
-		  echo "</td></tr>";
-		  
-		  
+	  
+		  //Create New Table for categories sync
+		  $sqlCreate = "CREATE TABLE willOnHairTableAppointments(
+			  `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+			  `willOnHairCol` INT NOT NULL DEFAULT 0,
+			  `ameliaCol` INT NOT NULL,
+			  `status` enum('approved','pending','canceled','rejected') DEFAULT NULL,
+			  `bookingStart` datetime NOT NULL,
+			  `bookingEnd` datetime NOT NULL,
+			  `notifyParticipants` tinyint(1) NOT NULL,
+			  `serviceId` int NOT NULL,
+			  `packageId` int DEFAULT NULL,
+			  `providerId` int NOT NULL,
+			  `locationId` int DEFAULT NULL,
+			  `internalNotes` text DEFAULT NULL,
+			  `googleCalendarEventId` varchar(255) DEFAULT NULL,
+			  `googleMeetUrl` varchar(255) DEFAULT NULL,
+			  `outlookCalendarEventId` varchar(255) DEFAULT NULL,
+			  `zoomMeeting` text DEFAULT NULL,
+			  `lessonSpace` text DEFAULT NULL,
+			  `parentId` int DEFAULT NULL
+				  )";
+	  
+		  $report_sqlCreate = mysqli_query($conn, $sqlCreate);
+		  //Verify if Table has been created
+		  if ($report_sqlCreate === TRUE) {
 		  }
-		  echo"</table>";
-		  
-		  }
-		  }	
-
-public function Print_wp_amelia_providers_to_daysoff($sname,$uname,$password,$db_name, $url){
-		$this->sname= $sname;
-		$this->uname=$uname;
-		$this->password =$password;
-		$this->db_name =$db_name;
-		$this->url =$url;
-		  
-		  //connect to database
-		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
-		  
-		
-			$sql_table_wp_amelia_providers_to_daysoff="SELECT * FROM wp_amelia_providers_to_daysoff";
-			$report_table_wp_amelia_providers_to_daysoff=mysqli_query($conn,$sql_table_wp_amelia_providers_to_daysoff);
-			if($report_table_wp_amelia_providers_to_daysoff== TRUE){ 
-			echo "TABLE NAME: wp_amelia_providers_to_daysoff";
-			echo "<table border='5'>";
-			echo "<tr>
-			<th>id</th>
-			<th>userId</th>   <th>name</th> <th>startDate</th>
-			<th>endDate</th> <th>repeat</th></tr>";
-		
-			while($row_table_wp_amelia_providers_to_daysoff=mysqli_fetch_array($report_table_wp_amelia_providers_to_daysoff) )
-			{
-		
-			
-			echo "<td>";									
-			echo$row_table_wp_amelia_providers_to_daysoff['id'];
-			echo "</td><td>";
-			echo$row_table_wp_amelia_providers_to_daysoff['userId'];
-			echo "</td><td>";
-			echo$row_table_wp_amelia_providers_to_daysoff['name'];
-			echo "</td> <td>";									
-			echo$row_table_wp_amelia_providers_to_daysoff['startDate'];
-			echo "</td><td>";
-			echo$row_table_wp_amelia_providers_to_daysoff['endDate'];
-			echo "</td><td>";
-			echo$row_table_wp_amelia_providers_to_daysoff['repeat'];
-			echo "</td></tr>";
-			
-			
-			}
-			echo"</table>";
-			
-		  }
-		  }	
-public function Print_wp_amelia_extras($sname,$uname,$password,$db_name, $url){
-		$this->sname= $sname;
-		$this->uname=$uname;
-		$this->password =$password;
-		$this->db_name =$db_name;
-		$this->url =$url;
-			
-			//connect to database
-			$conn = mysqli_connect($sname, $uname, $password, $db_name);
-			
-		
-			  $sql_table_wp_amelia_extras="SELECT * FROM wp_amelia_extras";
-			  $report_table_wp_amelia_extras=mysqli_query($conn,$sql_table_wp_amelia_extras);
-			  if($report_table_wp_amelia_extras== TRUE){ 
-			  echo "TABLE NAME: wp_amelia_extras";
-			  echo "<table border='5'>";
-			  echo "<tr>
-			  <th>id</th>
-			  <th>name</th>   <th>description</th> <th>price</th>
-			  <th>maxQuantity</th>   <th>duration</th> <th>serviceId</th>
-			  <th>position</th>   <th>aggregatedPrice</th> <th>translations</th></tr>";
-		
-			  while($row_table_wp_amelia_extras=mysqli_fetch_array($report_table_wp_amelia_extras) )
-			  {
-		
+	  
+		  // Select and collect data from table: wp_amelia_locations
+		  $sql_send_to_amelia = "SELECT * FROM wp_amelia_appointments";
+		  $report_send_to_amelia = mysqli_query($conn, $sql_send_to_amelia);
+	  
+		  if ($report_send_to_amelia == TRUE) {
+	  
+	  
+			while ($row_send_to_amelia = mysqli_fetch_array($report_send_to_amelia)) {
+			  // store each data from table: wp_amelia_locations in variables
+			  $ameliaId = $row_send_to_amelia['id'];
+	  
+			  $status = $row_send_to_amelia['status'];
+			  $bookingStart = $row_send_to_amelia['bookingStart'];
+			  $bookingEnd = $row_send_to_amelia['bookingEnd'];
+			  $notifyParticipants = $row_send_to_amelia['notifyParticipants'];
+	
+	
+			  $serviceId = $row_send_to_amelia['serviceId'];
+			  $packageId = $row_send_to_amelia['packageId'];
+			  $providerId = $row_send_to_amelia['providerId'];
+			  $locationId = $row_send_to_amelia['locationId'];
+			  $internalNotes = $row_send_to_amelia['pictureThumbPath'];
+	
+			  $googleCalendarEventId = $row_send_to_amelia['googleCalendarEventId'];
+			  $googleMeetUrl = $row_send_to_amelia['googleMeetUrl'];
+			  $outlookCalendarEventId = $row_send_to_amelia['outlookCalendarEventId'];
+			  $zoomMeeting = $row_send_to_amelia['zoomMeeting'];          
+			  $lessonSpace = $row_send_to_amelia['lessonSpace'];
+			  $parentId = $row_send_to_amelia['parentId'];
 			  
-				echo "<td>";									
-				echo$row_table_wp_amelia_extras['id'];
-				echo "</td><td>";
-				echo$row_table_wp_amelia_extras['name'];
-				echo "</td><td>";
-				echo$row_table_wp_amelia_extras['description'];
-				echo "</td> <td>";									
-				echo$row_table_wp_amelia_extras['price'];
-				echo "</td><td>";
-				echo$row_table_wp_amelia_extras['maxQuantity'];
-				echo "</td><td>";
-				echo$row_table_wp_amelia_extras['duration'];
-				echo "</td> <td>";									
-				echo$row_table_wp_amelia_extras['serviceId'];
-				echo "</td><td>";
-				echo$row_table_wp_amelia_extras['position'];
-				echo "</td><td>";
-				echo$row_table_wp_amelia_extras['aggregatedPrice'];
-				echo "</td><td>";
-				echo$row_table_wp_amelia_extras['translations'];
-				echo "</td></tr>";
-			  
-			  
-			  }
-			  echo"</table>";
-			  
-		  }
-		  }
-
-
-public function Print_wp_amelia_galleries($sname,$uname,$password,$db_name, $url){
-		$this->sname= $sname;
-		$this->uname=$uname;
-		$this->password =$password;
-		$this->db_name =$db_name;
-		$this->url =$url;
+	  
+			  // Select Table: willOnHairTableAppointments and isnert records coming from table: wp_amelia_locations
+			  $conn = mysqli_connect($sname, $uname, $password, $db_name);
+			  $qry = "SELECT * FROM willOnHairTableAppointments WHERE ameliaCol='$ameliaId'";
+			  $rowCheck = mysqli_query($conn, $qry);
+			  if ( mysqli_num_rows($rowCheck) > 0) {
 				
-				//connect to database
-				$conn = mysqli_connect($sname, $uname, $password, $db_name);
-				
-	  
-					$sql_table_wp_amelia_galleries="SELECT * FROM wp_amelia_galleries";
-					$report_table_wp_amelia_galleries=mysqli_query($conn,$sql_table_wp_amelia_galleries);
-					if($report_table_wp_amelia_galleries== TRUE){ 
-					echo "TABLE NAME: wp_amelia_galleries";
-					echo "<table border='5'>";
-					echo "<tr>
-					<th>id</th>
-					<th>entityId</th>   <th>entityType</th>  <th>pictureFullPath</th>  
-					<th>pictureThumbPath</th>   <th>position</th></tr>";
-	  
-					while($row_table_wp_amelia_galleries=mysqli_fetch_array($report_table_wp_amelia_galleries) )
-					{
-	  
-					
-					  echo "<td>";									
-					  echo$row_table_wp_amelia_galleries['id'];
-					  echo "</td><td>";
-					  echo$row_table_wp_amelia_galleries['entityId'];
-					  echo "</td><td>";
-					  echo$row_table_wp_amelia_galleries['entityType'];
-					  echo "</td><td>";									
-					  echo$row_table_wp_amelia_galleries['pictureFullPath'];
-					  echo "</td><td>";
-					  echo$row_table_wp_amelia_galleries['pictureThumbPath'];
-					  echo "</td><td>";
-					  echo$row_table_wp_amelia_galleries['position'];
-					  echo "</td></tr>";
-				  
-					
+			  } else {
+				$qry = "INSERT INTO willOnHairTableAppointments (`ameliaCol`, `status`, `bookingStart`, 
+				`bookingEnd`, `notifyParticipants`, `serviceId`, `packageId`, `providerId`, `locationId`, `internalNotes`, 
+				`googleCalendarEventId`, `googleMeetUrl`, `outlookCalendarEventId`, `zoomMeeting`, `lessonSpace`, `parentId`)  
+				VALUES ('$ameliaId','$status', '$bookingStart',
+				 '$bookingEnd','$notifyParticipants', '$serviceId','$packageId', '$providerId', '$locationId','$internalNotes',
+				 '$googleCalendarEventId','$googleMeetUrl','$outlookCalendarEventId','$zoomMeeting','$lessonSpace','$parentId')";
+				  if (mysqli_query($conn, $qry)) {
 				  }
-				  echo"</table>";
-				  
+	  
+			  }
 			}
 		  }
-public function Print_wp_amelia_providers_to_locations($sname,$uname,$password,$db_name, $url){
-			$this->sname= $sname;
-			$this->uname=$uname;
-			$this->password =$password;
-			$this->db_name =$db_name;
-			$this->url =$url;
-					
-					//connect to database
-					$conn = mysqli_connect($sname, $uname, $password, $db_name);
-					
-		  
-						$sql_table_wp_amelia_providers_to_locations="SELECT * FROM wp_amelia_providers_to_locations";
-						$report_table_wp_amelia_providers_to_locations=mysqli_query($conn,$sql_table_wp_amelia_providers_to_locations);
-						if($report_table_wp_amelia_providers_to_locations== TRUE){ 
-						echo "TABLE NAME: wp_amelia_providers_to_locations";
-						echo "<table border='5'>";
-						echo "<tr>
-						<th>id</th>
-						<th>userId</th>   <th>locationId</th> </tr>";
-		  
-						while($row_table_wp_amelia_providers_to_locations=mysqli_fetch_array($report_table_wp_amelia_providers_to_locations) )
-						{
-		  
-						
-						  echo "<td>";									
-						  echo$row_table_wp_amelia_providers_to_locations['id'];
-						  echo "</td><td>";
-						  echo$row_table_wp_amelia_providers_to_locations['userId'];
-						  echo "</td><td>";
-						  echo$row_table_wp_amelia_providers_to_locations['locationId'];
-						  echo "</td></tr>";
-					  
-						
+	  
+	  
+		  //After receiving data from table: wp_amelia_locations, next process to send it to the backend
+		  $sql_table3 = "SELECT * FROM willOnHairTableAppointments";
+		  $report_table3 = mysqli_query($conn, $sql_table3);
+		  if ($report_table3 == TRUE) {
+	  
+			while ($row_table3 = mysqli_fetch_array($report_table3)) {
+	  
+			  // select and store all records of table: willOnHairTableAppointments in variables
+	  
+			$willOnHairId = $row_table3['willOnHairCol'];
+			$ameliaId = $row_table3['ameliaCol'];
+	
+			$statusC = $row_table3['status'];
+			$bookingStartC = $row_table3['bookingStart'];
+			$bookingEndC = $row_table3['bookingEnd'];
+			$notifyParticipantsC = $row_table3['notifyParticipants'];
+	  
+			$internalNotesC = $row_table3['internalNotes'];
+			$googleCalendarEventIdC = $row_table3['googleCalendarEventId'];
+			$googleMeetUrlC = $row_table3['googleMeetUrl']; 
+	
+	  
+			$outlookCalendarEventIdC = $row_table3['outlookCalendarEventId'];
+			$zoomMeetingC = $row_table3['zoomMeeting'];
+			$lessonSpaceC = $row_table3['lessonSpace'];
+	
+	
+			$parentIdC = $row_table3['parentId'];
+			$serviceIdC = $row_table3['serviceId'];
+			$packageIdC = $row_table3['packageId'];
+			$providerIdC = $row_table3['providerId'];
+			$locationIdC = $row_table3['locationId'];
+	
+	
+	
+			$date = date('d-m-y h:i:s');
+	
+			  // we bind fields from the backend with our variables of the Table: willOnHairTableAppointments in an array
+			  $postApp = [
+											  "id" => $willOnHairId,
+											  "ameliaId" => $ameliaId,
+											  "status"=> strtoupper($statusC),
+											  "bookingStart"=> $bookingStartC,
+											  "bookingEnd"=> $bookingEndC,
+											  "notifyParticipants"=> $notifyParticipantsC,
+											  "packageId" => $packageIdC,
+											  "internalNotes"=> $internalNotesC,
+											  "googleCalendarEventId"=> $googleCalendarEventIdC,
+											  "googleMeetUrl"=> $googleMeetUrlC,
+											  "outlookCalendarEventId"=> $outlookCalendarEventIdC,
+											  "zoomMeeting"=> $zoomMeetingC,
+											  "lessonSpace"=> $lessonSpaceC,
+											];
+	  
+			  // request header of our post to the backend
+	  
+			  $curl = curl_init();
+	  
+			  curl_setopt_array($curl, array(
+				CURLOPT_URL => "$url/api/v1/employees/$providerIdC/appointments/amelia?locationId=$locationIdC&servicesId=$serviceIdC",
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_ENCODING => '',
+				CURLOPT_MAXREDIRS => 10,
+				CURLOPT_TIMEOUT => 0,
+				CURLOPT_FOLLOWLOCATION => true,
+				CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+				CURLOPT_CUSTOMREQUEST => 'POST',
+				CURLOPT_POSTFIELDS => json_encode($postApp),
+				//here we convert our array to a json format
+				CURLOPT_HTTPHEADER => array(
+				  'Content-Type: application/json'
+				),
+			  )
+			  );
+	  
+			  $response = curl_exec($curl);
+	  
+			  curl_close($curl);
+			//   echo "<br>1st POST<br> --------- $response ----------- <br>";
+
+			}
+		  }
+		}
+	  
+		//=============get from database and insert in amelia_locations ===============
+		public function Print_wp_amelia_appointments_insert($sname, $uname, $password, $db_name, $url)
+		{
+		  $this->sname = $sname;
+		  $this->uname = $uname;
+		  $this->password = $password;
+		  $this->db_name = $db_name;
+		  $this->url = $url;
+	  
+		  // we creat a connection
+		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
+	  
+		  // request header of our get from the backend
+		  $curl = curl_init();
+		  curl_setopt_array($curl, array(
+			CURLOPT_URL => "$url/api/v1/appointments",
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING => '',
+			CURLOPT_MAXREDIRS => 10,
+			CURLOPT_TIMEOUT => 0,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			CURLOPT_CUSTOMREQUEST => 'GET',
+			CURLOPT_HTTPHEADER => array(
+			  'Content-Type: application/json'
+			),
+		  )
+		  );
+	  
+		  $response = curl_exec($curl);
+		  $result = json_decode($response, true); // here we decode data coming from backend and store it as an array
+		  curl_close($curl);
+
+		//   echo "<br>Getttt <br> --------- $response ----------- <br>";
+
+	  
+		  // we loop through our array and store eacch into variables
+		  $i = 0;
+		  while ($i < count($result)) {
+			$willOnHairId = $result[$i]['id'];
+			$ameliaId = $result[$i]['ameliaId'];
+			$status = $result[$i]['status'];
+			$bookingStart = $result[$i]['bookingStart'];
+			$bookingEnd = $result[$i]['bookingEnd'];
+	
+	  
+			$notifyParticipants = $result[$i]['notifyParticipants'];
+			$packageId = $result[$i]['packageId'];
+			$internalNotes = $result[$i]['internalNotes'];
+			$googleCalendarEventId = $result[$i]['googleCalendarEventId'];
+	  
+			$googleMeetUrl = $result[$i]['googleMeetUrl'];
+			$outlookCalendarEventId = $result[$i]['outlookCalendarEventId'];
+			$zoomMeeting = $result[$i]['zoomMeeting'];
+			$lessonSpace = $result[$i]['lessonSpace'];
+	
+			$providerId = $result[$i]['employee']['ameliaId'];
+			$locationId = $result[$i]['location']['ameliaId'];
+			$serviceId = $result[$i]['service']['ameliaId'];
+	
+	
+			//we select all records from table: willOnHairTableAppointments with the particular key:ameliaCol
+			$conn = mysqli_connect($sname, $uname, $password, $db_name);
+			$sql_First_get = "SELECT * FROM willOnHairTableAppointments WHERE ameliaCol=$ameliaId";
+			$report_First_get = mysqli_query($conn, $sql_First_get);
+	  
+	  
+	  
+			if ($report_First_get == TRUE) {
+			  // if the above key exist we update the records that concerns the key
+			  $sql_updat_wilID = "UPDATE `willOnHairTableAppointments` SET `willOnHairCol`='$willOnHairId' WHERE ameliaCol = '$ameliaId'";
+			  $report_updat_wilID = mysqli_query($conn, $sql_updat_wilID);
+			  if (mysqli_query($conn, $report_updat_wilID)) {
+			  }
+			} else {
+			  //if the above key does not exist we insert a new record of the non existing key
+			  $insert_First_get = "INSERT INTO willOnHairTableAppointments(`willOnHairCol`, `ameliaCol`, `status`,`bookingStart`, 
+				`bookingEnd`, `notifyParticipants`, `serviceId`, `packageId`, `providerId`, `locationId`, `internalNotes`, 
+				`googleCalendarEventId`, `googleMeetUrl`, `outlookCalendarEventId`, `zoomMeeting`, `lessonSpace`, `parentId`) 
+				VALUES ('$willOnHairId', '$ameliaId', '$status', '$bookingStart',
+				 '$bookingEnd','$notifyParticipants', '$serviceId','$packageId', '$providerId', '$locationId','$internalNotes',
+				 '$googleCalendarEventId','$googleMeetUrl','$outlookCalendarEventId','$zoomMeeting','$lessonSpace','$parentId')";
+			  if (mysqli_query($conn, $insert_First_get)) {
+			  }
+			}
+	  
+	  
+	  
+	  
+			$i++;
+		  }
+	  
+		  // we select table: willOnHairTableAppointments for the process of 
+		  //generating amelia ids for the records coming from the backend by 
+		  //inserting them into the table: wp_amelia_locations
+		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
+		  $sql_send_to_amelia = "SELECT * FROM willOnHairTableAppointments";
+		  $report_send_to_amelia = mysqli_query($conn, $sql_send_to_amelia);
+	  
+		  if ($report_send_to_amelia == TRUE) {
+			while ($row_send_to_amelia = mysqli_fetch_array($report_send_to_amelia)) {
+			  // we store all its records into variables
+			  $willOnHairId = $row_send_to_amelia['willOnHairCol'];
+			  $ameliaId = $row_send_to_amelia['ameliaCol'];
+	  
+			  $status = $row_send_to_amelia['status'];
+	
+			  $bookingStart = $row_send_to_amelia['bookingStart'];
+			  $bookingEnd = $row_send_to_amelia['bookingEnd'];
+			  $notifyParticipants = $row_send_to_amelia['notifyParticipants'];
+		
+			  $internalNotes = $row_send_to_amelia['internalNotes'];
+			  $googleCalendarEventId = $row_send_to_amelia['googleCalendarEventId'];
+			  $googleMeetUrl = $row_send_to_amelia['googleMeetUrl']; 
+	  
+		
+			  $outlookCalendarEventId = $row_send_to_amelia['outlookCalendarEventId'];
+			  $zoomMeeting = $row_send_to_amelia['zoomMeeting'];
+			  $lessonSpace = $row_send_to_amelia['lessonSpace'];
+	  
+	  
+			  $parentId = $row_send_to_amelia['parentId'];
+			  $serviceId = $row_send_to_amelia['serviceId'];
+			  $packageId = $row_send_to_amelia['packageId'];
+			  $providerId = $row_send_to_amelia['providerId'];
+			  $locationId = $row_send_to_amelia['locationId'];
+	  
+	
+			  
+	  
+			  // check the record ameliaId if null or equal to 0 we insert the whole record into tablle:wp_amelia_locations
+			  if ($ameliaId == NULL || $ameliaId == 0) {
+				$send_to_amelia_category = "INSERT INTO wp_amelia_appointments (`status`, `bookingStart`, 
+				`bookingEnd`, `notifyParticipants`, `serviceId`, `packageId`, `providerId`, `locationId`, `internalNotes`, 
+				`googleCalendarEventId`, `googleMeetUrl`, `outlookCalendarEventId`, `zoomMeeting`, `lessonSpace`, `parentId`) 
+				VALUES ('$status', '$bookingStart',
+				 '$bookingEnd','$notifyParticipants', '$serviceId','$packageId', '$providerId', '$locationId','$internalNotes',
+				 '$googleCalendarEventId','$googleMeetUrl','$outlookCalendarEventId','$zoomMeeting','$lessonSpace','$parentId')";
+				if (mysqli_query($conn, $send_to_amelia_category)) {
+	  
+				  //during each insert of each records form the while loop and the above 
+				  //contion we collect the last id that was inserted into the table:wp_amelia_locations so as to
+				  //up the column: ameliaCol in th Table: willOnHairTableAppointments
+				  $last_id = mysqli_insert_id($conn);
+				  if ($last_id == TRUE) {
+					$willOnHairTableAppointments_updateTable = "UPDATE `willOnHairTableAppointments` SET `ameliaCol`='$last_id' WHERE willOnHairCol = '$willOnHairId'";
+	  
+					if (mysqli_query($conn, $willOnHairTableAppointments_updateTable)) {
+					  $sql_second_post = "SELECT * FROM willOnHairTableAppointments WHERE willOnHairCol = '$willOnHairId'";
+					  $report_second_post = mysqli_query($conn, $sql_second_post);
+	  
+					  if ($row_second_post = mysqli_fetch_array($report_second_post)) {
+	  
+						$ameliaId_send = $row_second_post['ameliaCol'];
+	  
+						$status_send = $row_second_post['status'];
+	
+						$bookingStart_send = $row_second_post['bookingStart'];
+						$bookingEnd_send = $row_second_post['bookingEnd'];
+						$notifyParticipants_send = $row_second_post['notifyParticipants'];
+				  
+						$internalNotes_send = $row_second_post['internalNotes'];
+						$googleCalendarEventId_send = $row_second_post['googleCalendarEventId'];
+						$googleMeetUrl_send = $row_second_post['googleMeetUrl']; 
+				
+				  
+						$outlookCalendarEventId_send = $row_second_post['outlookCalendarEventId'];
+						$zoomMeeting_send = $row_second_post['zoomMeeting'];
+						$lessonSpace_send = $row_second_post['lessonSpace'];
+				
+				
+						$parentId_send = $row_second_post['parentId'];
+						$serviceId_send = $row_second_post['serviceId'];
+						$packageId_send = $row_second_post['packageId'];
+						$providerId_send = $row_second_post['providerId'];
+						$locationId_send = $row_second_post['locationId'];
+	
+	  
+						//After the column: ameliaCol in th Table: willOnHairTableAppointments is up to date
+						// we send the updated table:willOnHairTableAppointments to the backend
+						$secondPostApp = [
+						  "id" => $willOnHairId,
+						  "ameliaId" => $ameliaId_send,
+						  "status" => strtoupper($status_send),
+						  "bookingStart"=> $bookingStart_send,
+						  "bookingEnd"=> $bookingEnd_send,
+						  "notifyParticipants"=> $notifyParticipants_send,
+						  "packageId" => $packageId_send,
+						  "internalNotes"=> $internalNotes_send,
+						  "googleCalendarEventId"=> $googleCalendarEventId_send,
+						  "googleMeetUrl"=> $googleMeetUrl_send,
+						  "outlookCalendarEventId"=> $outlookCalendarEventId_send,
+						  "zoomMeeting"=> $zoomMeeting_send,
+						  "lessonSpace"=> $lessonSpace_send,  
+						];
+	  
+						$curl = curl_init();
+	  
+						curl_setopt_array($curl, array(
+						  CURLOPT_URL => "$url/api/v1/employees/$providerId_send/appointments/amelia?locationId=$locationId_send&servicesId=$serviceId_send",
+						  CURLOPT_RETURNTRANSFER => true,
+						  CURLOPT_ENCODING => '',
+						  CURLOPT_MAXREDIRS => 1,
+						  CURLOPT_TIMEOUT => 0,
+						  CURLOPT_FOLLOWLOCATION => true,
+						  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+						  CURLOPT_CUSTOMREQUEST => 'POST',
+						  CURLOPT_POSTFIELDS => json_encode($secondPostApp),
+						  CURLOPT_HTTPHEADER => array(
+							'Content-Type: application/json'
+						  ),
+						)
+						);
+	  
+						$response = curl_exec($curl);
+	  
+						curl_close($curl);
+						// echo "<br>2st POST<br> --------- $response ----------- <br>";
+
 					  }
-					  echo"</table>";
-					  
+					}
+				  }
 				}
 			  }
-
-		  
-
-
-public function Print_wp_amelia_customer_bookings($sname,$uname,$password,$db_name, $url){
-		$this->sname= $sname;
-		$this->uname=$uname;
-		$this->password =$password;
-		$this->db_name =$db_name;
-		$this->url =$url;
-						
-						//connect to database
-						$conn = mysqli_connect($sname, $uname, $password, $db_name);
-						
-
-								$sql_table_customer_bookings="SELECT * FROM wp_amelia_customer_bookings";
-								$report_table_customer_bookings=mysqli_query($conn,$sql_table_customer_bookings);
-								if($report_table_customer_bookings== TRUE){ 
-								echo "TABLE NAME: wp_amelia_customer_bookings";
-								echo "<table border='5'>";
-								echo "<tr>
-								<th>id</th>
-								<th>appointmentId</th>   <th>customerId</th>  <th>status</th>  
-								<th>price</th>   <th>persons</th>  <th>couponId</th> 
-								<th>token</th>  <th>customFields</th>  <th>info</th>   <th>utcOffset</th>  
-								<th>aggregatedPrice</th>   <th>packageCustomerServiceId</th>  <th>duration</th> 
-								<th>created</th></tr>";
-
-								while($row_table_customer_bookings=mysqli_fetch_array($report_table_customer_bookings) )
-								{
-
-								
-									echo "<td>";									
-									echo$row_table_customer_bookings['id'];
-									echo "</td><td>";
-									echo$row_table_customer_bookings['appointmentId'];
-									echo "</td><td>";
-									echo$row_table_customer_bookings['customerId'];
-									echo "</td><td>";									
-									echo$row_table_customer_bookings['status'];
-									echo "</td><td>";
-									echo$row_table_customer_bookings['price'];
-									echo "</td><td>";
-									echo$row_table_customer_bookings['persons'];
-									echo "</td><td>";
-									echo$row_table_customer_bookings['couponId'];
-									echo "</td><td>";									
-									echo$row_table_customer_bookings['token'];
-									echo "</td><td>";									
-									echo$row_table_customer_bookings['customFields'];
-									echo "</td><td>";									
-									echo$row_table_customer_bookings['info'];
-									echo "</td><td>";
-									echo$row_table_customer_bookings['utcOffset'];
-									echo "</td><td>";
-									echo$row_table_customer_bookings['aggregatedPrice'];
-									echo "</td><td>";									
-									echo$row_table_customer_bookings['packageCustomerServiceId'];
-									echo "</td><td>";
-									echo$row_table_customer_bookings['duration'];
-									echo "</td><td>";
-									echo$row_table_customer_bookings['created'];
-									echo "</td></tr>";
-							
-								
-							}
-							echo"</table>";
-							
-				}
 			}
+		  }
+	  
+	  
+	  
+	  
+		  // we display the final results of the table: wp_amelia_locations 
+		  //which now contains a sync data of wp_amelia_locations and the backend 
+		  $sql_table1="SELECT * FROM wp_amelia_appointments";
+		  $report_table1=mysqli_query($conn,$sql_table1);
+		  if($report_table1== TRUE){ 
+		  echo "TABLE NAME: wp_amelia_appointments";
+		  echo "<table border='5'>";
+		  echo "<tr><th>id</th><th>status</th><th>bookingStart</th><th>bookingEnd</th>
+		  <th>notifyParticipants</th><th>serviceId</th><th>packageId</th>
+		  <th>providerId</th><th>locationId</th><th>internalNotes</th>
+		  <th>googleCalendarEventId</th><th>googleMeetUrl</th>
+		  <th>outlookCalendarEventId</th><th>zoomMeeting</th><th>lessonSpace</th><th>parentId</th></tr>";
+	
+		  while($row_table1=mysqli_fetch_array($report_table1) )
+		  {
+	
+		  
+			echo "<tr><td>";									
+			echo$row_table1['id'];
+			echo "</td><td>";
+			echo$row_table1['status'];
+			echo "</td><td>";									
+			echo$row_table1['bookingStart'];
+			echo "</td><td>";									
+			echo$row_table1['bookingEnd'];
+			echo "</td><td>";									
+			echo$row_table1['notifyParticipants'];
+			echo "</td><td>";									
+			echo$row_table1['serviceId'];
+			echo "</td><td>";									
+			echo$row_table1['packageId'];
+			echo "</td><td>";									
+			echo$row_table1['providerId'];
+			echo "</td><td>";									
+			echo$row_table1['locationId'];
+			echo "</td><td>";									
+			echo$row_table1['internalNotes'];
+			echo "</td><td>";									
+			echo$row_table1['googleCalendarEventId'];
+			echo "</td><td>";									
+			echo$row_table1['googleMeetUrl'];
+			echo "</td><td>";									
+			echo$row_table1['outlookCalendarEventId'];
+			echo "</td><td>";									
+			echo$row_table1['zoomMeeting'];
+			echo "</td><td>";									
+			echo$row_table1['lessonSpace'];
+			echo "</td><td>";									
+			echo$row_table1['parentId'];
+			echo "</td></tr>";
+			echo"<tr></tr>";
+			echo"<tr></tr>";
+			echo"<tr></tr>";
+		
+	
+		}
+		echo"</table>";
+		  }
+	  
+		  // $query = "DROP table willOnHairTableAppointments";
+		  // if (mysqli_multi_query($conn, $query)) {
+		  // }
+		}
+	
 
 
+		//Customer Booking get and post
+		//============= post to database ======================
+		public function Print_wp_amelia_customer_bookings_post($sname, $uname, $password, $db_name, $url)
+		{
+		  $this->sname = $sname;
+		  $this->uname = $uname;
+		  $this->password = $password;
+		  $this->db_name = $db_name;
+		  $this->url = $url;
+	  
+	  
+	  
+		  //connect to database
+		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
+	  
+		  //Create New Table for categories sync
+		  $sqlCreate = "CREATE TABLE willOnHairTableCustomerBooking(
+			  `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+			  `willOnHairCol` INT NOT NULL DEFAULT 0,
+			  `ameliaCol` INT NOT NULL,
+			  `appointmentId` int(11) DEFAULT NULL,
+			`customerId` int(11) NOT NULL,
+			`status` enum('approved','pending','canceled','rejected') DEFAULT NULL,
+			`price` double NOT NULL,
+			`persons` int(11) NOT NULL,
+			`couponId` int(11) DEFAULT NULL,
+			`token` varchar(10) DEFAULT NULL,
+			`customFields` text DEFAULT NULL,
+			`info` text DEFAULT NULL,
+			`utcOffset` int(3) DEFAULT NULL,
+			`aggregatedPrice` tinyint(1) DEFAULT 1,
+			`packageCustomerServiceId` int(11) DEFAULT NULL,
+			`duration` int(11) DEFAULT NULL,
+			`created` datetime DEFAULT NULL
+				  )";
+	  
+		  $report_sqlCreate = mysqli_query($conn, $sqlCreate);
+		  //Verify if Table has been created
+		  if ($report_sqlCreate === TRUE) {
+		  }
+	  
+		  // Select and collect data from table: wp_amelia_customer_bookings 
+		  $sql_send_to_amelia = "SELECT * FROM wp_amelia_customer_bookings";
+		  $report_send_to_amelia = mysqli_query($conn, $sql_send_to_amelia);
+	  
+		  if ($report_send_to_amelia == TRUE) {
+	  
+	  
+			while ($row_send_to_amelia = mysqli_fetch_array($report_send_to_amelia)) {
+			  // store each data from table: wp_amelia_customer_bookings  in variables
+			  $ameliaId = $row_send_to_amelia['id'];
+	  
+			  $appointmentId = $row_send_to_amelia['appointmentId'];
+			  $customerId = $row_send_to_amelia['customerId'];
+			  $status = $row_send_to_amelia['status'];
+			  $price = $row_send_to_amelia['price'];
+			  $persons = $row_send_to_amelia['persons'];
+
+			  $couponId = $row_send_to_amelia['couponId'];
+			  $token = $row_send_to_amelia['token'];
+			  $customFields = $row_send_to_amelia['customFields'];
+			  $info = $row_send_to_amelia['info'];
+			  $utcOffset = $row_send_to_amelia['utcOffset'];
+	
+			  $aggregatedPrice = $row_send_to_amelia['aggregatedPrice'];
+			  $packageCustomerServiceId = $row_send_to_amelia['packageCustomerServiceId'];
+			  $duration = $row_send_to_amelia['duration'];
+			  $created = $row_send_to_amelia['created'];   
+					 
+			  
+			  
+	  
+			  // Select Table: willOnHairTableCustomerBooking and isnert records coming from table: wp_amelia_customer_bookings 
+			  $conn = mysqli_connect($sname, $uname, $password, $db_name);
+			  $qry = "SELECT * FROM willOnHairTableCustomerBooking WHERE ameliaCol='$ameliaId'";
+			  $rowCheck = mysqli_query($conn, $qry);
+
+
+			  if ( mysqli_num_rows($rowCheck) > 0) {
+				// echo "exist";
+			} else {
+				$qry = "INSERT INTO willOnHairTableCustomerBooking (`ameliaCol`,  `appointmentId`, `customerId`, `status`, 
+				`price`, `persons`, `couponId`, `token`, `customFields`, `info`, `utcOffset`, `aggregatedPrice`, 
+				`packageCustomerServiceId`, `duration`, `created`)  
+				VALUES ('$ameliaId','$appointmentId', '$customerId', '$status','$price', '$persons', '$couponId','$token',
+				 '$customFields', '$info','$utcOffset', '$aggregatedPrice','$packageCustomerServiceId','$duration',
+				 '$created')";
+				  if (mysqli_query($conn, $qry)) {
+				  }
+	  
+			  }
+			}
+		  }
+	  
+	  
+		  //After receiving data from table: wp_amelia_customer_bookings , next process to send it to the backend
+		  $sql_table3 = "SELECT * FROM willOnHairTableCustomerBooking";
+		  $report_table3 = mysqli_query($conn, $sql_table3);
+		  if ($report_table3 == TRUE) {
+	  
+			while ($row_table3 = mysqli_fetch_array($report_table3)) {
+	  
+			  // select and store all records of table: willOnHairTableCustomerBooking in variables
+	  
+			$willOnHairId = $row_table3['willOnHairCol'];
+			$ameliaId = $row_table3['ameliaCol'];
+	
+			$appointmentIdC = $row_table3['appointmentId'];
+			$customerIdC = $row_table3['customerId'];
+			$statusC = $row_table3['status'];
+			$priceC = $row_table3['price'];
+	  
+			$personsC = $row_table3['persons'];
+			$couponIdC = $row_table3['couponId'];
+			$tokenC = $row_table3['token']; 
+	
+	  
+			$customFieldsC = $row_table3['customFields'];
+			$infoC = $row_table3['info'];
+			$utcOffsetC = $row_table3['utcOffset'];
+	
+	
+			$aggregatedPriceC = $row_table3['aggregatedPrice'];
+			$packageCustomerServiceIdC = $row_table3['packageCustomerServiceId'];
+			$durationC = $row_table3['duration'];
+			$createdC = $row_table3['created'];
 			
+	
+			  // we bind fields from the backend with our variables of the Table: willOnHairTableCustomerBooking in an array
+			  $postBooking = [
+											  "id" => $willOnHairId,
+											  "ameliaId" => $ameliaId,
+											  "status"=> strtoupper($statusC),
+											  "price" =>  $priceC,
+											  "persons" => $personsC,
+											  "token" => "fd9cd60fbd",
+											  "customFields" => $customFieldsC,
+											  "aggregatedPrice" =>  $aggregatedPriceC,
+											  "duration"=>  $durationC
+											];
+	  
+			  // request header of our post to the backend
+	  
+			  $curl = curl_init();
+	  
+			  curl_setopt_array($curl, array(
+				CURLOPT_URL => "$url/api/v1/appointments/$appointmentIdC/bookings/amelia?customerId=$customerIdC",
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_ENCODING => '',
+				CURLOPT_MAXREDIRS => 10,
+				CURLOPT_TIMEOUT => 0,
+				CURLOPT_FOLLOWLOCATION => true,
+				CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+				CURLOPT_CUSTOMREQUEST => 'POST',
+				CURLOPT_POSTFIELDS => json_encode($postBooking),
+				//here we convert our array to a json format
+				CURLOPT_HTTPHEADER => array(
+				  'Content-Type: application/json'
+				),
+			  )
+			  );
+	  
+			  $response = curl_exec($curl);
+	  
+			  curl_close($curl);
+			//   echo " <br>1st post----------$response <br>";
 
+			}
+		  }
+		}
+	  
+		//=============get from database and insert in amelia_Customer Booking ===============
+		public function Print_wp_amelia_customer_bookings_insert($sname, $uname, $password, $db_name, $url)
+		{
+		  $this->sname = $sname;
+		  $this->uname = $uname;
+		  $this->password = $password;
+		  $this->db_name = $db_name;
+		  $this->url = $url;
+	  
+		  // we creat a connection
+		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
+	  
+		  // request header of our get from the backend
+		  $curl = curl_init();
+		  curl_setopt_array($curl, array(
+			CURLOPT_URL => "$url/api/v1/appointments/customerBokings",
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING => '',
+			CURLOPT_MAXREDIRS => 10,
+			CURLOPT_TIMEOUT => 0,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			CURLOPT_CUSTOMREQUEST => 'GET',
+			CURLOPT_HTTPHEADER => array(
+			  'Content-Type: application/json'
+			),
+		  )
+		  );
+	  
+		  $response = curl_exec($curl);
+		  $result = json_decode($response, true); // here we decode data coming from backend and store it as an array
+		  curl_close($curl);
+		//   echo " <br>1st get----------$response <br>";
 
+	  
+		  // we loop through our array and store eacch into variables
+		  $i = 0;
+		  while ($i < count($result)) {
+			$willOnHairId = $result[$i]['id'];
+			$ameliaId = $result[$i]['ameliaId'];
+			$status = $result[$i]['status'];
+			$price = $result[$i]['price'];
+			$persons = $result[$i]['persons'];
+	
+	  
+			$couponId = $result[$i]['couponId'];
+			$token = $result[$i]['token'];
+			$customFields = $result[$i]['customFields'];
+			$info = $result[$i]['info'];
+	  
+			$utcOffset = $result[$i]['utcOffset'];
+			$aggregatedPrice = $result[$i]['aggregatedPrice'];
+			$packageCustomerServiceId = $result[$i]['packageCustomerServiceId'];
+			$duration = $result[$i]['duration'];
+	
+			$created = $result[$i]['created'];
+			$appointmentId = $result[$i]['appointment']['ameliaId'];
+			$customerId = $result[$i]['customer']['ameliaId'];
+			// echo " <br>appointmentId----------$appointmentId <br>";
+			// echo " <br>customerId----------$customerId <br>";
 
-
-			
-
-			
-
-public function Print_wp_amelia_appointments($sname,$uname,$password,$db_name, $url){
-			$this->sname= $sname;
-			$this->uname=$uname;
-			$this->password =$password;
-			$this->db_name =$db_name;
-			$this->url =$url;
+	
+	
+			//we select all records from table: willOnHairTableCustomerBooking with the particular key:ameliaCol
+			$conn = mysqli_connect($sname, $uname, $password, $db_name);
+			$sql_First_get = "SELECT * FROM willOnHairTableCustomerBooking WHERE ameliaCol=$ameliaId";
+			$report_First_get = mysqli_query($conn, $sql_First_get);
+	  
+	  
+	  
+			if ($report_First_get == TRUE) {
+			  // if the above key exist we update the records that concerns the key
+			  $sql_updat_wilID = "UPDATE `willOnHairTableCustomerBooking` SET `willOnHairCol`='$willOnHairId' WHERE ameliaCol = '$ameliaId'";
+			  $report_updat_wilID = mysqli_query($conn, $sql_updat_wilID);
+			  if (mysqli_query($conn, $report_updat_wilID)) {
+			  }
+			} else {
+			  //if the above key does not exist we insert a new record of the non existing key
+			  $insert_First_get = "INSERT INTO willOnHairTableCustomerBooking (`willOnHairCol`, `ameliaCol`, 
+			  `appointmentId`, `customerId`, `status`, `price`, `persons`, `couponId`, `token`, `customFields`, 
+			  `info`, `utcOffset`, `aggregatedPrice`, `packageCustomerServiceId`, `duration`, `created`)
+				VALUES ('$willOnHairId', '$ameliaId', 
+				'$appointmentId', '$customerId','$status','$price', '$persons','$couponId', '$token', '$customFields',
+				'$info','$utcOffset', '$aggregatedPrice','$packageCustomerServiceId','$duration','$created')";
+			  if (mysqli_query($conn, $insert_First_get)) {
+			  }
+			}
+	  
+	  
+	  
+	  
+			$i++;
+		  }
+	  
+		  // we select table: willOnHairTableCustomerBooking for the process of 
+		  //generating amelia ids for the records coming from the backend by 
+		  //inserting them into the table: wp_amelia_customer_bookings 
+		  $conn = mysqli_connect($sname, $uname, $password, $db_name);
+		  $sql_send_to_amelia = "SELECT * FROM willOnHairTableCustomerBooking";
+		  $report_send_to_amelia = mysqli_query($conn, $sql_send_to_amelia);
+	  
+		  if ($report_send_to_amelia == TRUE) {
+			while ($row_send_to_amelia = mysqli_fetch_array($report_send_to_amelia)) {
+			  // we store all its records into variables
+			  $willOnHairId = $row_send_to_amelia['willOnHairCol'];
+			  $ameliaId = $row_send_to_amelia['ameliaCol'];
+	  
+	
+			  $appointmentId = $row_send_to_amelia['appointmentId'];
+			  $customerId = $row_send_to_amelia['customerId'];
+			  $status = $row_send_to_amelia['status'];
+			  $price = $row_send_to_amelia['price'];
+			  $persons = $row_send_to_amelia['persons'];
+			  
+	
+			  $couponId = $row_send_to_amelia['couponId'];
+			  $token = $row_send_to_amelia['token'];
+			  $customFields = $row_send_to_amelia['customFields'];
+			  $info = $row_send_to_amelia['info'];
+			  $utcOffset = $row_send_to_amelia['utcOffset'];
+	
+			  $aggregatedPrice = $row_send_to_amelia['aggregatedPrice'];
+			  $packageCustomerServiceId = $row_send_to_amelia['packageCustomerServiceId'];
+			  $duration = $row_send_to_amelia['duration'];
+			  $created = $row_send_to_amelia['created'];   
+					 
+	  
+	
+			  
+	  
+			  // check the record ameliaId if null or equal to 0 we insert the whole record into tablle:wp_amelia_customer_bookings 
+			  if ($ameliaId == NULL || $ameliaId == 0) {
+				$send_to_amelia_category = "INSERT INTO wp_amelia_customer_bookings ( `appointmentId`, `customerId`, `status`, `price`, `persons`, `couponId`, `token`, `customFields`, 
+				`info`, `utcOffset`, `aggregatedPrice`, `packageCustomerServiceId`, `duration`, `created`) 
+				VALUES ( '$appointmentId', '$customerId','$status','$price', '$persons','$couponId', '$token', '$customFields',
+				'$info','$utcOffset', '$aggregatedPrice','$packageCustomerServiceId','$duration','$created')";
+				if (mysqli_query($conn, $send_to_amelia_category)) {
+	  
+				  //during each insert of each records form the while loop and the above 
+				  //contion we collect the last id that was inserted into the table:wp_amelia_customer_bookings  so as to
+				  //up the column: ameliaCol in th Table: willOnHairTableCustomerBooking
+				  $last_id = mysqli_insert_id($conn);
+				  if ($last_id == TRUE) {
+					$willOnHairTableCustomerBooking_updateTable = "UPDATE `willOnHairTableCustomerBooking` SET `ameliaCol`='$last_id' WHERE willOnHairCol = '$willOnHairId'";
+	  
+					if (mysqli_query($conn, $willOnHairTableCustomerBooking_updateTable)) {
+					  $sql_second_post = "SELECT * FROM willOnHairTableCustomerBooking WHERE willOnHairCol = '$willOnHairId'";
+					  $report_second_post = mysqli_query($conn, $sql_second_post);
+	  
+					  if ($row_second_post = mysqli_fetch_array($report_second_post)) {
+	  
+						$ameliaId_send = $row_second_post['ameliaCol'];
+	  
+						$appointmentId_send = $row_second_post['appointmentId'];
+						$customerId_send = $row_second_post['customerId'];
+						$status_send = $row_second_post['status'];
+						$price_send = $row_second_post['price'];
+				  
+						$persons_send = $row_second_post['persons'];
+						$couponId_send = $row_second_post['couponId'];
+						$token_send = $row_second_post['token']; 
 				
-			
-
-
-
-
-			// $id_get = 7;	
-			// $status = "approved";
-			// $bookingStart = "2022-12-15 08:30:00";
-			// $bookingEnd = "2023-01-06 08:00:00";
-			// $notifyParticipants = 1;
-			
-			// $serviceId = 2;
-			// $packageId = 2;
-			// $providerId = 1;
-			// $locationId = 1;
-			
-			// $internalNotes = "hh";
-			// $googleCalendarEventId = "j";
-			// $googleMeetUrl = "j";
-			// $outlookCalendarEventId = "h";
-			
-			// $zoomMeeting = "b";
-			// $lessonSpace = "h";
-			// $parentId = 3;
-			
-			
-			
-			// $conn = mysqli_connect($sname, $uname, $password, $db_name);
-										
-			// $sql_appSend="SELECT * FROM wp_amelia_appointments WHERE id = '$id_get'";
-			// $report_appSend=mysqli_query($conn,$sql_appSend);
-			
-			// 	if(mysqli_num_rows($report_appSend) > 0){ 
+				  
+						$customFields_send = $row_second_post['customFields'];
+						$info_send = $row_second_post['info'];
+						$utcOffset_send = $row_second_post['utcOffset'];
 				
-			// 		$updateApp	= "UPDATE `wp_amelia_appointments` SET `status`='$status',`bookingStart`='$bookingStart',`bookingEnd`='$bookingEnd',`notifyParticipants`=$notifyParticipants,`serviceId`='$serviceId',`packageId`='$packageId',`providerId`='$providerId',`locationId`='$locationId',`internalNotes`='$internalNotes',`googleCalendarEventId`='$googleCalendarEventId',`googleMeetUrl`='$googleMeetUrl',`outlookCalendarEventId`='$outlookCalendarEventId',`zoomMeeting`='$zoomMeeting',`lessonSpace`='$lessonSpace',`parentId`=$parentId WHERE id='$id_get'";
+				
+						$aggregatedPrice_send = $row_second_post['aggregatedPrice'];
+						$packageCustomerServiceId_send = $row_second_post['packageCustomerServiceId'];
+						$duration_send = $row_second_post['duration'];
+						$created_send = $row_second_post['created'];
+	
+	
+	  
+						//After the column: ameliaCol in th Table: willOnHairTableCustomerBooking is up to date
+						// we send the updated table:willOnHairTableCustomerBooking to the backend
+						$secondPostCustomBooking = [
+						  "id" => $willOnHairId,
+						  "ameliaId" => $ameliaId_send,
+						  "status" => strtoupper($status_send),
+						  "price" =>  $price_send,
+						  "persons" => $persons_send,
+						  "token" => "fd9cd60fbd",
+						  "customFields" => $customFields_send,
+						  "aggregatedPrice" =>  $aggregatedPrice_send,
+						  "duration"=>  $duration_send
 
-			// 		// $updateApp	= "UPDATE wp_amelia_appointments SET  bookingStart=$bookingStart, bookingEnd=$bookingEnd,	notifyParticipants=$notifyParticipants,	serviceId=$serviceId,	packageId=$packageId,	providerId=$providerId,	locationId=$locationId,	internalNotes=$internalNotes,	googleCalendarEventId=$googleCalendarEventId,	googleMeetUrl=$googleMeetUrl,	outlookCalendarEventId=$outlookCalendarEventId,	zoomMeeting=$zoomMeeting,	lessonSpace=$lessonSpace,	parentId=$parentId WHERE id = $id_get";
-			// 	// $report_update = mysqli_query($conn,$updateApp);
-			// 	if (mysqli_query($conn,$updateApp)){
-					
-			// 		echo " update";
-			// 	}
-			// } else{
-			// 	  $insertApp = "INSERT INTO `wp_amelia_appointments`(`id`, `status`, `bookingStart`, `bookingEnd`, `notifyParticipants`, `serviceId`, `packageId`, `providerId`, `locationId`, `internalNotes`, `googleCalendarEventId`, `googleMeetUrl`, `outlookCalendarEventId`, `zoomMeeting`, `lessonSpace`, `parentId`) VALUES ('','$status','$bookingStart','$bookingEnd','$notifyParticipants','$serviceId','$packageId','$providerId ','$locationId','$internalNotes','$googleCalendarEventId','$googleMeetUrl','$outlookCalendarEventId','$zoomMeeting','$lessonSpace','$parentId ')";
-			// 	  if (mysqli_query($conn,$insertApp)){
-			// 		echo " insert";
-			// 	}
-			// 	}
-
-
-
-
-
-
-
-
-							//connect to database
-							$conn = mysqli_connect($sname, $uname, $password, $db_name);
-							
-
-									$sql_table1="SELECT * FROM wp_amelia_appointments";
-									$report_table1=mysqli_query($conn,$sql_table1);
-									if($report_table1== TRUE){ 
-									echo "TABLE NAME: wp_amelia_appointments";
-									echo "<table border='5'>";
-									echo "<tr><th>id</th><th>status</th><th>bookingStart</th><th>bookingEnd</th>
-									<th>notifyParticipants</th><th>serviceId</th><th>packageId</th>
-									<th>providerId</th><th>locationId</th><th>internalNotes</th>
-									<th>googleCalendarEventId</th><th>googleMeetUrl</th>
-									<th>outlookCalendarEventId</th><th>zoomMeeting</th><th>lessonSpace</th><th>parentId</th></tr>";
-
-									while($row_table1=mysqli_fetch_array($report_table1) )
-									{
-
-									
-										echo "<tr><td>";									
-										echo$row_table1['id'];
-										echo "</td><td>";
-										echo$row_table1['status'];
-										echo "</td><td>";									
-										echo$row_table1['bookingStart'];
-										echo "</td><td>";									
-										echo$row_table1['bookingEnd'];
-										echo "</td><td>";									
-										echo$row_table1['notifyParticipants'];
-										echo "</td><td>";									
-										echo$row_table1['serviceId'];
-										echo "</td><td>";									
-										echo$row_table1['packageId'];
-										echo "</td><td>";									
-										echo$row_table1['providerId'];
-										echo "</td><td>";									
-										echo$row_table1['locationId'];
-										echo "</td><td>";									
-										echo$row_table1['internalNotes'];
-										echo "</td><td>";									
-										echo$row_table1['googleCalendarEventId'];
-										echo "</td><td>";									
-										echo$row_table1['googleMeetUrl'];
-										echo "</td><td>";									
-										echo$row_table1['outlookCalendarEventId'];
-										echo "</td><td>";									
-										echo$row_table1['zoomMeeting'];
-										echo "</td><td>";									
-										echo$row_table1['lessonSpace'];
-										echo "</td><td>";									
-										echo$row_table1['parentId'];
-										echo "</td></tr>";
-										echo"<tr></tr>";
-										echo"<tr></tr>";
-										echo"<tr></tr>";
-								
-						
-								}
-								echo"</table>";
-
-
-
-													
-// $curl = curl_init();
-
-// curl_setopt_array($curl, array(
-//   CURLOPT_URL => 'http://192.168.16.112:3000/api/v1/appointments',
-//   CURLOPT_RETURNTRANSFER => true,
-//   CURLOPT_ENCODING => '',
-//   CURLOPT_MAXREDIRS => 10,
-//   CURLOPT_TIMEOUT => 0,
-//   CURLOPT_FOLLOWLOCATION => true,
-//   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//   CURLOPT_CUSTOMREQUEST => 'GET',
-//   CURLOPT_HTTPHEADER => array(
-//     'Content-Type: application/json'
-//   ),
-// ));
-
-// $response = curl_exec($curl);
-// $result = json_decode($response, true);
-// curl_close($curl);
-
-
-// for($i = 0; $i < count($result); $i++) {
-    
-//   }
-
-//   $i = 0;
-//   while($i < count($result)) {
-//     print_r ( "id: {$result[$i]['id']}"<br>);
-
-
-
-// 	$i++;
-//   }
-// $i = 0;
-// while($i != 17){
-
-// 	$i++;
-// }
+	
+						];
+	  
+						$curl = curl_init();
+	  
+						curl_setopt_array($curl, array(
+						  CURLOPT_URL => "$url/api/v1/appointments/$appointmentId_send/bookings/amelia?customerId=$customerId_send",
+						  CURLOPT_RETURNTRANSFER => true,
+						  CURLOPT_ENCODING => '',
+						  CURLOPT_MAXREDIRS => 1,
+						  CURLOPT_TIMEOUT => 0,
+						  CURLOPT_FOLLOWLOCATION => true,
+						  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+						  CURLOPT_CUSTOMREQUEST => 'POST',
+						  CURLOPT_POSTFIELDS => json_encode($secondPostCustomBooking),
+						  CURLOPT_HTTPHEADER => array(
+							'Content-Type: application/json'
+						  ),
+						)
+						);
+	  
+						$response = curl_exec($curl);
+	  
+						curl_close($curl);
+						// echo " <br>2st post----------$response <br>";
+					  }
 					}
-
-
-
-							
-							
+				  }
 				}
+			  }
+			}
+		  }
+	  
+	  
+	  
+	  
+		  // we display the final results of the table: wp_amelia_customer_bookings  
+		  //which now contains a sync data of wp_amelia_customer_bookings  and the backend 
+		  $sql_table_customer_bookings="SELECT * FROM wp_amelia_customer_bookings";
+		  $report_table_customer_bookings=mysqli_query($conn,$sql_table_customer_bookings);
+		  if($report_table_customer_bookings== TRUE){ 
+		  echo "TABLE NAME: wp_amelia_customer_bookings";
+		  echo "<table border='5'>";
+		  echo "<tr>
+		  <th>id</th>
+		  <th>appointmentId</th>   <th>customerId</th>  <th>status</th>  
+		  <th>price</th>   <th>persons</th>  <th>couponId</th> 
+		  <th>token</th>  <th>customFields</th>  <th>info</th>   <th>utcOffset</th>  
+		  <th>aggregatedPrice</th>   <th>packageCustomerServiceId</th>  <th>duration</th> 
+		  <th>created</th></tr>";
+	
+		  while($row_table_customer_bookings=mysqli_fetch_array($report_table_customer_bookings) )
+		  {
+	
+		  
+			echo "<td>";									
+			echo$row_table_customer_bookings['id'];
+			echo "</td><td>";
+			echo$row_table_customer_bookings['appointmentId'];
+			echo "</td><td>";
+			echo$row_table_customer_bookings['customerId'];
+			echo "</td><td>";									
+			echo$row_table_customer_bookings['status'];
+			echo "</td><td>";
+			echo$row_table_customer_bookings['price'];
+			echo "</td><td>";
+			echo$row_table_customer_bookings['persons'];
+			echo "</td><td>";
+			echo$row_table_customer_bookings['couponId'];
+			echo "</td><td>";									
+			echo$row_table_customer_bookings['token'];
+			echo "</td><td>";									
+			echo$row_table_customer_bookings['customFields'];
+			echo "</td><td>";									
+			echo$row_table_customer_bookings['info'];
+			echo "</td><td>";
+			echo$row_table_customer_bookings['utcOffset'];
+			echo "</td><td>";
+			echo$row_table_customer_bookings['aggregatedPrice'];
+			echo "</td><td>";									
+			echo$row_table_customer_bookings['packageCustomerServiceId'];
+			echo "</td><td>";
+			echo$row_table_customer_bookings['duration'];
+			echo "</td><td>";
+			echo$row_table_customer_bookings['created'];
+			echo "</td></tr>";
+		
+		  
+		}
+		echo"</table>";
+		  }
+	  
+		  // $query = "DROP table willOnHairTableCustomerBooking";
+		  // if (mysqli_multi_query($conn, $query)) {
+		  // }
+		}
 
 
-		
-		
+		//============= post to database ======================
+    public function Print_wp_amelia_providers_to_daysoff_post($sname,$uname,$password,$db_name, $url){
+      $this->sname= $sname;
+      $this->uname=$uname;
+      $this->password =$password;
+      $this->db_name =$db_name;
+      $this->url =$url;
+      
+      
+            
+            //connect to database
+            $conn = mysqli_connect($sname, $uname, $password, $db_name);
+            
+            //Create New Table for categories sync
+            $sqlCreate = "CREATE TABLE willOnHairTableDayOff(
+              `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+              `willOnHairCol` INT NOT NULL DEFAULT 0,
+              `ameliaCol` INT NOT NULL,
+              `userId` int(11) NOT NULL,
+              `name` varchar(255) NOT NULL,
+              `startDate` date NOT NULL,
+              `endDate` date NOT NULL,
+              `repeat` tinyint(1) NOT NULL
+            )";
+            
+              $report_sqlCreate=mysqli_query($conn,$sqlCreate);
+            //Verify if Table has been created
+              if ($report_sqlCreate === TRUE) {
+              }
+  
+              // Select and collect data from table: wp_amelia_providers_to_daysoff 
+              $sql_send_to_amelia="SELECT * FROM wp_amelia_providers_to_daysoff";
+              $report_send_to_amelia=mysqli_query($conn,$sql_send_to_amelia);
+  
+              if($report_send_to_amelia== TRUE){ 
+  
+              while($row_send_to_amelia=mysqli_fetch_array($report_send_to_amelia))
+              {
+                // store each data from table: wp_amelia_providers_to_daysoff  in variables
+                  $ameliaId = $row_send_to_amelia['id'];
+  
+                  $userId = $row_send_to_amelia['userId'];	
+                  $name = $row_send_to_amelia['name'];
+  
+                  $startDate = $row_send_to_amelia['startDate'];
+                  $endDate = $row_send_to_amelia['endDate'];
+                  $repeat = $row_send_to_amelia['repeat'];
+
+          
+  
+                  // Select Table: willOnHairTableDayOff and isnert records coming from table: wp_amelia_providers_to_daysoff 
+                  $conn = mysqli_connect($sname, $uname, $password, $db_name);
+                    $qry="SELECT * FROM willOnHairTableDayOff WHERE ameliaCol='$ameliaId'";
+                    $rowCheck=mysqli_query($conn,$qry);
+                    if (mysqli_num_rows($rowCheck) > 0) { 
+                      
+                        
+                      } else{
+                      $qry = "INSERT INTO willOnHairTableDayOff (`ameliaCol`, `userId`, `name`, `startDate`, `endDate`, `repeat`) 
+                      VALUES ('$ameliaId','$userId', '$name', '$startDate','$endDate','$repeat')"; 
+                      if (mysqli_query($conn,$qry)){ 
+                      
+                      }  
+                  }
+              }
+            }
+      
+  
+            //After receiving data from table: wp_amelia_providers_to_daysoff , next process to send it to the backend
+                $sql_table3="SELECT * FROM willOnHairTableDayOff";
+                $report_table3=mysqli_query($conn,$sql_table3);
+                if($report_table3== TRUE ){ 
+      
+                while($row_table3=mysqli_fetch_array($report_table3) )
+                {
+              
+                  // select and store all records of table: willOnHairTableDayOff in variables
+  
+                  $willOnHairId = $row_table3['willOnHairCol'];
+                  $ameliaId = $row_table3['ameliaCol'];
+                  $userIdC = $row_table3['userId'];
+                  $nameC = $row_table3['name'];
+                  $startDateC = $row_table3['startDate'];
+                  $endDateC = $row_table3['endDate'];
+                  $repeatC = $row_table3['repeat'];
+      
+                  // we bind fields from the backend with our variables of the Table: willOnHairTableDayOff in an array
+                  $postDayOff = [ 
+                    "id" => $willOnHairId,
+                    "ameliaId" => $ameliaId,
+                    "name" => $nameC,
+                    "startDate" => $startDateC,
+                    "endDate" => $endDateC,
+                    "repeat" => $repeatC
+                ];
+  
+                // request header of our post to the backend
+      
+                  $curl = curl_init();
+                  
+                  curl_setopt_array($curl, array(
+                    CURLOPT_URL => "$url/api/v1/employees/$userIdC/days-off/amelia",                    
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_ENCODING => '',
+                    CURLOPT_MAXREDIRS => 1,
+                    CURLOPT_TIMEOUT => 0,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                    CURLOPT_CUSTOMREQUEST => 'POST',
+                    CURLOPT_POSTFIELDS => json_encode($postDayOff),//here we convert our array to a json format
+                    CURLOPT_HTTPHEADER => array(
+                    'Content-Type: application/json'
+                    ),
+                  ));
+                  
+                  $response = curl_exec($curl);
+                //   echo "<br> ===== 1st post : $response <br>";
+                curl_close($curl);
+  
+  
+              }
+  
+                        
+        }
+    }
+    
+    //=============get from database and insert in wp_amelia_providers_to_daysoff ===============
+    public function Print_wp_amelia_providers_to_daysoff_insert($sname,$uname,$password,$db_name, $url){
+      $this->sname= $sname;
+      $this->uname=$uname;
+      $this->password =$password;
+      $this->db_name =$db_name;
+      $this->url =$url;
+    
+  // we creat a connection
+    $conn = mysqli_connect($sname, $uname, $password, $db_name);			
+  
+    // request header of our get from the backend
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+      CURLOPT_URL => "$url/api/v1/employees/daysOff",
+      CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_ENCODING => '',
+    CURLOPT_MAXREDIRS => 10,
+    CURLOPT_TIMEOUT => 0,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    CURLOPT_CUSTOMREQUEST => 'GET',
+    CURLOPT_HTTPHEADER => array(
+    'Content-Type: application/json'
+    ),
+    ));
+    
+    $response = curl_exec($curl);
+    $result = json_decode($response, true); // here we decode data coming from backend and store it as an array
+    curl_close($curl);
+
+    
+    // we loop through our array and store eacch into variables
+    $i = 0;
+    while($i < count($result)) {
+    $willOnHairId = $result[$i]['id'];	
+    $ameliaId = $result[$i]['ameliaId'];
+    $userId = $result[$i]['user']['ameliaId'];
+    $name = $result[$i]['name'];
+    $startDate = $result[$i]['startDate'];
+    $endDate = $result[$i]['endDate'];
+    $repeat = $result[$i]['repeat'];
+
+
+    //we select all records from table: willOnHairTableDayOff with the particular key:ameliaCol
+    $conn = mysqli_connect($sname, $uname, $password, $db_name);			
+    $sql_First_get="SELECT * FROM willOnHairTableDayOff WHERE ameliaCol=$ameliaId";
+    $report_First_get=mysqli_query($conn,$sql_First_get);
+    
+
+    
+    if($report_First_get == TRUE){ 
+      // if the above key exist we update the records that concerns the key
+          $sql_updat_wilID="UPDATE `willOnHairTableDayOff` SET `willOnHairCol`='$willOnHairId' WHERE ameliaCol = '$ameliaId'";
+          $report_updat_wilID=mysqli_query($conn,$sql_updat_wilID);
+          if (mysqli_query($conn,$report_updat_wilID)){ 
+          
+          }  
+        
+      } else{
+        //if the above key does not exist we insert a new record of the non existing key
+        $insert_First_get = "INSERT INTO willOnHairTableDayOff(`willOnHairCol`, `ameliaCol`, `userId`, `name`, `startDate`, `endDate`, `repeat`) 
+        VALUES ('$willOnHairId', '$ameliaId','$userId','$name','$startDate','$endDate','$repeat')"; 
+          if (mysqli_query($conn,$insert_First_get)){ 
+          }  
+      }
+    
+    
+    
+    
+    $i++;
+    }
+    
+    // we select table: willOnHairTableDayOff for the process of 
+    //generating amelia ids for the records coming from the backend by 
+    //inserting them into the table: wp_amelia_providers_to_daysoff 
+    $conn = mysqli_connect($sname, $uname, $password, $db_name);			
+    $sql_send_to_amelia="SELECT * FROM willOnHairTableDayOff";
+    $report_send_to_amelia=mysqli_query($conn,$sql_send_to_amelia);
+  
+    if($report_send_to_amelia== TRUE ){ 
+    while($row_send_to_amelia=mysqli_fetch_array($report_send_to_amelia))
+    {
+        // we store all its records into variables
+        $id = $row_send_to_amelia['id'];
+        $willOnHairId = $row_send_to_amelia['willOnHairCol'];	
+        $ameliaId = $row_send_to_amelia['ameliaCol'];
+  
+        $userId = $row_send_to_amelia['userId'];	
+        $name = $row_send_to_amelia['name'];
+  
+        $startDate = $row_send_to_amelia['startDate'];
+        $endDate = $row_send_to_amelia['endDate'];
+        $repeat = $row_send_to_amelia['repeat'];
+  
+    
+      // check the record ameliaId if null or equal to 0 we insert the whole record into tablle:wp_amelia_providers_to_daysoff 
+      if($ameliaId == NULL || $ameliaId == 0){ 
+        $send_to_amelia_category = "INSERT INTO wp_amelia_providers_to_daysoff (`userId`, `name`, `startDate`, `endDate`, `repeat`) 
+        VALUES ('$userId','$name','$startDate','$endDate','$repeat')"; 
+        if (mysqli_query($conn,$send_to_amelia_category)){ 
+  
+          //during each insert of each records form the while loop and the above 
+          //contion we collect the last id that was inserted into the table:wp_amelia_providers_to_daysoff  so as to
+          //up the column: ameliaCol in th Table: willOnHairTableDayOff
+        $last_id = mysqli_insert_id($conn);
+        if( $last_id ==TRUE ){
+            $willOnHairTableDayOff_updateTable	= "UPDATE `willOnHairTableDayOff` SET `ameliaCol`='$last_id' WHERE willOnHairCol = '$willOnHairId'";
+  
+            if (mysqli_query($conn,$willOnHairTableDayOff_updateTable)){
+            $sql_second_post="SELECT * FROM willOnHairTableDayOff WHERE willOnHairCol = '$willOnHairId'";
+            $report_second_post=mysqli_query($conn,$sql_second_post);
+      
+            if($row_second_post=mysqli_fetch_array($report_second_post)){ 
+  
+              $ameliaId_send = $row_second_post['ameliaCol'];
+    
+              $userId_send = $row_second_post['userId'];	
+              $name_send = $row_second_post['name'];
+    
+              $startDate_send = $row_second_post['startDate'];
+              $endDate_send = $row_second_post['endDate'];
+              $repeat_send = $row_second_post['repeat'];
+
+  
+            //After the column: ameliaCol in th Table: willOnHairTableDayOff is up to date
+            // we send the updated table:willOnHairTableDayOff to the backend
+            $secondPostDayOff = [ 
+              "id" => $willOnHairId,
+              "ameliaId" => $ameliaId_send,
+              "name" => $name_send,
+              "startDate" => $startDate_send,
+              "endDate" => $endDate_send,
+              "repeat" => $repeat_send
+          ];
+  
+            $curl = curl_init();
+            
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => "$url/api/v1/employees/$userId_send/days-off/amelia",                    
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 1,
+              CURLOPT_TIMEOUT => 0,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS => json_encode($secondPostDayOff),
+              CURLOPT_HTTPHEADER => array(
+              'Content-Type: application/json'
+              ),
+            ));
+            
+            $response = curl_exec($curl);
+  
+          curl_close($curl);
+		//   echo "<br> ===== 2st post : $response <br>";
+
+  
+  
+            }
+  
+  
+        }
+        
+  
+        }
+        
+        }  
+  
+  
+      }
+      
+      }
+    }
+  
+  
+    // $query = "DROP table willOnHairTableDayOff";
+    // if (mysqli_multi_query($conn, $query)) {
+    //   echo "Dropped Successfully";
+    // } else {
+    //   echo "Error:" . mysqli_error($conn);
+    // }	
+    
+    // we display the final results of the table: wp_amelia_providers_to_daysoff  
+    //which now contains a sync data of wp_amelia_providers_to_daysoff  and the backend 
+    $sql_table3="SELECT * FROM wp_amelia_providers_to_daysoff";
+    $report_table3=mysqli_query($conn,$sql_table3);
+    if($report_table3== TRUE){ 
+    echo "TABLE NAME: wp_amelia_providers_to_daysoff";
+    echo "<table border='5'>";
+    echo "<tr><th>id</th>
+    <th>userId</th><th>name</th><th>startDate</th>
+    <th>endDate</th><th>repeat</th></tr>";
+    
+    while($row_table3=mysqli_fetch_array($report_table3) )
+    {
+    
+    
+      echo "<tr><td>";									
+      echo$row_table3['id'];
+      echo "</td><td>";
+      echo$row_table3['userId'];
+      echo "</td><td>";
+      echo$row_table3['name'];
+      echo "</td><td>";
+      echo$row_table3['startDate'];
+      echo "</td><td>";									
+      echo$row_table3['endDate'];
+      echo "</td><td>";					
+      echo$row_table3['repeat'];
+      echo "</td></tr>";
+      echo"<tr></tr>";
+      echo"<tr></tr>";
+      echo"<tr></tr>";
+    
+    }
+    echo"</table>";
+    
+    }
+    
+    }
+  
+
 
 
 
 	}
 ?>
+
+
+<style>
+body {
+  background: #D3D3D3
+}
+
+table {
+  border: 1px #00BFFF solid;
+  font-size: 1em;
+  box-shadow: 0 2px 5px rgba(0,0,0,.25);
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  margin-right: 1rem;
+}
+
+th {
+  text-align: center;
+  background: #00BFFF;
+}
+  
+thead {
+  font-weight: bold;
+  color: #fff;
+
+}
+  
+ td, th {
+  padding: .5em .5em;
+  vertical-align: middle;
+}
+  
+ td {
+  border-bottom: 1px solid rgba(0,0,0,.1);
+  background: #fff;
+}
+
+a {
+  color: #73685d;
+}
+  
+ @media all and (max-width: 768px) {
+    
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+  
+  th {
+    text-align: right;
+  }
+  
+  table {
+    position: relative; 
+    padding-bottom: 0;
+    border: none;
+    box-shadow: 0 0 10px rgba(0,0,0,.2);
+  }
+  
+  thead {
+    float: left;
+    white-space: nowrap;
+  }
+  
+  tbody {
+    overflow-x: auto;
+    overflow-y: hidden;
+    position: relative;
+    white-space: nowrap;
+  }
+  
+  tr {
+    display: inline-block;
+    vertical-align: top;
+  }
+  
+  th {
+    border-bottom: 1px solid #a39485;
+  }
+  
+  td {
+    border-bottom: 1px solid #e5e5e5;
+  }
+  
+  
+  }
+
+  
+</style>

@@ -8,7 +8,7 @@
 
 
 <?php
-$url = 'http://192.168.16.124:3000';
+$url = 'http://192.168.43.7:3000';
 
 
 include('Control/Data_View_Control.php');
@@ -24,18 +24,33 @@ $get_data->Print_wp_amelia_location_post($_POST['server'],$_POST['username'],$_P
 $get_data->Print_wp_amelia_location_insert($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
 
 
-// $get_data->Print_wp_amelia_providers_to_weekdays_post($_POST['server'], $_POST['username'], $_POST['password'], $_POST['DB_Name'], $url);
-
-// $get_data->Print_wp_amelia_providers_to_weekdays_insert($_POST['server'], $_POST['username'], $_POST['password'], $_POST['DB_Name'], $url);
-
-
 $get_data->Print_wp_amelia_categories_post($_POST['server'], $_POST['username'], $_POST['password'], $_POST['DB_Name'], $url);
 
 $get_data->Print_wp_amelia_categories_insert($_POST['server'], $_POST['username'], $_POST['password'], $_POST['DB_Name'], $url);
 
 
+// $get_data->Print_wp_amelia_providers_to_locations_post($_POST['server'], $_POST['username'], $_POST['password'], $_POST['DB_Name'], $url);
 
-// $get_data->drop($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
+// $get_data->Print_wp_amelia_providers_to_locations_insert($_POST['server'], $_POST['username'], $_POST['password'], $_POST['DB_Name'], $url);
+
+
+
+$get_data->Print_wp_amelia_providers_to_weekdays_post($_POST['server'], $_POST['username'], $_POST['password'], $_POST['DB_Name'], $url);
+
+$get_data->Print_wp_amelia_providers_to_weekdays_insert($_POST['server'], $_POST['username'], $_POST['password'], $_POST['DB_Name'], $url);
+
+
+$get_data->Print_wp_amelia_providers_to_periods_post($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
+
+$get_data->Print_wp_amelia_providers_to_periods_insert($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
+
+
+
+$get_data->Print_wp_amelia_providers_to_daysoff_post($_POST['server'], $_POST['username'], $_POST['password'], $_POST['DB_Name'], $url);
+
+$get_data->Print_wp_amelia_providers_to_daysoff_insert($_POST['server'], $_POST['username'], $_POST['password'], $_POST['DB_Name'], $url);
+
+
 
 
 
@@ -44,40 +59,21 @@ $get_data->Print_wp_amelia_services_post($_POST['server'],$_POST['username'],$_P
 $get_data->Print_wp_amelia_services_insert($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
 
 
-
 $get_data->Print_wp_amelia_providers_to_services_post($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
 
 $get_data->Print_wp_amelia_providers_to_services_insert($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
 
 
+$get_data->Print_wp_amelia_appointments_post($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
+
+$get_data->Print_wp_amelia_appointments_insert($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
 
 
 
-// $get_data->Print_wp_amelia_appointments($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
+$get_data->Print_wp_amelia_customer_bookings_post($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
 
-// $get_data->Print_wp_amelia_customer_bookings($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
-
-
-
-// $get_data->Print_wp_amelia_galleries($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
-
-
-
-
-
-// $get_data->Print_wp_amelia_providers_to_daysoff($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
-
-// $get_data->Print_wp_amelia_providers_to_periods($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
-
-
-// $get_data->Print_wp_amelia_providers_to_services($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
-
-// $get_data->Print_wp_amelia_providers_to_weekdays($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
-
-
+$get_data->Print_wp_amelia_customer_bookings_insert($_POST['server'],$_POST['username'],$_POST['password'],$_POST['DB_Name'], $url); 
 
 
 
 ?>
-
-
